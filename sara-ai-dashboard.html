@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sara AI — Customer Care Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #080b10;
+  --surface:  #0e1318;
+  --card:     #131920;
+  --border:   #1e2730;
+  --border2:  #263040;
+  --accent:   #00e5ff;
+  --accent2:  #ff4d6d;
+  --accent3:  #39ff14;
+  --accent4:  #ffbe0b;
+  --text:     #dde6f0;
+  --muted:    #5a7080;
+  --muted2:   #8aa0b0;
+  --font:     'Bricolage Grotesque', sans-serif;
+  --mono:     'Fira Code', monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scanline overlay ── */
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,.012) 2px, rgba(0,229,255,.012) 4px);
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* ── Top Bar ── */
+.topbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink:0;
+}
+.logo {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-0.5px;
+}
+.logo-dot {
+  width:10px; height:10px;
+  background: var(--accent);
+  border-radius:50%;
+  box-shadow: 0 0 12px var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(1.3)}
+}
+.logo span { color: var(--accent); }
+
+.topbar-right {
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.status-badge {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  font-family: var(--mono);
+  color: var(--accent3);
+  background: rgba(57,255,20,.08);
+  border: 1px solid rgba(57,255,20,.2);
+  padding: 4px 12px;
+  border-radius:4px;
+}
+.status-dot {
+  width:6px; height:6px;
+  background: var(--accent3);
+  border-radius:50%;
+  box-shadow: 0 0 6px var(--accent3);
+  animation: pulse 1.5s infinite;
+}
+.time-display {
+  font-family: var(--mono);
+  font-size:13px;
+  color: var(--muted2);
+}
+
+/* ── Layout ── */
+.layout {
+  display:grid;
+  grid-template-columns: 260px 1fr 340px;
+  flex:1;
+  overflow:hidden;
+}
+
+/* ── Left Sidebar ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.section-label {
+  font-size:10px;
+  font-family: var(--mono);
+  color: var(--muted);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:8px;
+  padding:12px;
+  position:relative;
+  overflow:hidden;
+}
+.stat-card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:2px;
+}
+.stat-card.blue::before { background: var(--accent); }
+.stat-card.red::before  { background: var(--accent2); }
+.stat-card.green::before{ background: var(--accent3); }
+.stat-card.yellow::before{ background: var(--accent4); }
+
+.stat-num {
+  font-size:24px;
+  font-weight:800;
+  font-family: var(--mono);
+  line-height:1;
+  margin-bottom:4px;
+}
+.stat-card.blue .stat-num   { color: var(--accent); }
+.stat-card.red .stat-num    { color: var(--accent2); }
+.stat-card.green .stat-num  { color: var(--accent3); }
+.stat-card.yellow .stat-num { color: var(--accent4); }
+
+.stat-label {
+  font-size:10px;
+  color: var(--muted2);
+  font-family: var(--mono);
+}
+
+/* Platform pills */
+.platform-list { display:flex; flex-direction:column; gap:6px; }
+.platform-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 8px 12px;
+  border-radius:6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size:13px;
+  cursor:pointer;
+  transition: all .15s;
+}
+.platform-item:hover, .platform-item.active {
+  border-color: var(--accent);
+  background: rgba(0,229,255,.05);
+}
+.platform-item.active { color: var(--accent); }
+.platform-icon { font-size:15px; margin-right:8px; }
+.platform-count {
+  font-family: var(--mono);
+  font-size:11px;
+  color: var(--muted);
+  background: var(--border);
+  padding: 2px 7px;
+  border-radius:10px;
+}
+
+/* Conv list */
+.conv-list {
+  flex:1;
+  overflow-y:auto;
+  padding:8px;
+}
+.conv-list::-webkit-scrollbar{width:3px}
+.conv-list::-webkit-scrollbar-track{background:transparent}
+.conv-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.conv-item {
+  padding:12px;
+  border-radius:8px;
+  border: 1px solid transparent;
+  cursor:pointer;
+  transition: all .15s;
+  margin-bottom:4px;
+  position:relative;
+}
+.conv-item:hover { background: var(--card); border-color: var(--border); }
+.conv-item.active { background: rgba(0,229,255,.06); border-color: rgba(0,229,255,.3); }
+.conv-item.has-pending::after {
+  content:'';
+  position:absolute;
+  top:10px; right:10px;
+  width:8px; height:8px;
+  background: var(--accent2);
+  border-radius:50%;
+  box-shadow: 0 0 8px var(--accent2);
+  animation: pulse 1s infinite;
+}
+
+.conv-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.conv-avatar {
+  width:32px; height:32px;
+  border-radius:8px;
+  background: var(--border2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  flex-shrink:0;
+}
+.conv-name { font-size:13px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.conv-time { font-size:10px; color: var(--muted); font-family: var(--mono); }
+.conv-preview { font-size:12px; color: var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:40px; }
+
+.ai-badge {
+  font-size:9px;
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius:3px;
+}
+.ai-on  { background: rgba(0,229,255,.12); color: var(--accent); border: 1px solid rgba(0,229,255,.2); }
+.ai-off { background: rgba(255,77,109,.12); color: var(--accent2); border: 1px solid rgba(255,77,109,.2); }
+
+/* ── Center Chat ── */
+.chat-panel {
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background: var(--bg);
+}
+
+.chat-header {
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.chat-header-info { display:flex; align-items:center; gap:12px; }
+.chat-avatar-lg {
+  width:40px; height:40px;
+  border-radius:10px;
+  background: var(--card);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  border: 1px solid var(--border2);
+}
+.chat-name { font-size:15px; font-weight:700; }
+.chat-meta { font-size:12px; color: var(--muted2); font-family: var(--mono); }
+
+.chat-actions { display:flex; gap:8px; }
+
+.btn {
+  padding: 7px 14px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  font-size:12px;
+  font-family: var(--font);
+  font-weight:600;
+  transition: all .15s;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.btn-ghost {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger {
+  background: rgba(255,77,109,.1);
+  border: 1px solid rgba(255,77,109,.3);
+  color: var(--accent2);
+}
+.btn-danger:hover { background: rgba(255,77,109,.2); }
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+/* Toggle switch */
+.toggle-wrap {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color: var(--muted2);
+}
+.toggle {
+  position:relative;
+  width:40px; height:22px;
+  cursor:pointer;
+}
+.toggle input { display:none; }
+.toggle-slider {
+  position:absolute;
+  inset:0;
+  background: var(--border2);
+  border-radius:11px;
+  transition:.3s;
+}
+.toggle-slider::before {
+  content:'';
+  position:absolute;
+  width:16px; height:16px;
+  left:3px; top:3px;
+  background: var(--muted);
+  border-radius:50%;
+  transition:.3s;
+}
+.toggle input:checked + .toggle-slider { background: rgba(0,229,255,.3); }
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Messages */
+.messages {
+  flex:1;
+  overflow-y:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.messages::-webkit-scrollbar{width:3px}
+.messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.msg-row {
+  display:flex;
+  gap:10px;
+  animation: fadeUp .2s ease;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.msg-row.user { flex-direction:row-reverse; }
+
+.msg-avatar {
+  width:30px; height:30px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  flex-shrink:0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  margin-top:2px;
+}
+
+.msg-bubble {
+  max-width:70%;
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:13.5px;
+  line-height:1.6;
+  position:relative;
+}
+.msg-row.user .msg-bubble {
+  background: rgba(0,229,255,.1);
+  border: 1px solid rgba(0,229,255,.2);
+  border-top-right-radius:3px;
+}
+.msg-row.ai .msg-bubble {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-top-left-radius:3px;
+}
+.msg-row.agent .msg-bubble {
+  background: rgba(255,190,11,.08);
+  border: 1px solid rgba(255,190,11,.2);
+  border-top-left-radius:3px;
+}
+
+.msg-meta {
+  font-size:10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-top:4px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.msg-row.user .msg-meta { justify-content: flex-end; }
+
+.intent-tag {
+  font-size:9px;
+  padding: 1px 6px;
+  border-radius:3px;
+  background: rgba(0,229,255,.1);
+  color: var(--accent);
+  border: 1px solid rgba(0,229,255,.15);
+  font-family: var(--mono);
+}
+
+/* Empty state */
+.empty-state {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  color: var(--muted);
+}
+.empty-icon { font-size:48px; opacity:.3; }
+.empty-text { font-size:14px; }
+
+/* Reply Box */
+.reply-box {
+  padding:16px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink:0;
+}
+.reply-mode-tabs {
+  display:flex;
+  gap:4px;
+  margin-bottom:10px;
+}
+.tab-btn {
+  padding: 4px 12px;
+  border-radius:5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted2);
+  font-size:11px;
+  font-family: var(--mono);
+  cursor:pointer;
+  transition: all .15s;
+}
+.tab-btn.active {
+  background: rgba(0,229,255,.1);
+  border-color: rgba(0,229,255,.3);
+  color: var(--accent);
+}
+.reply-input-row {
+  display:flex;
+  gap:10px;
+}
+.reply-input {
+  flex:1;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius:8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size:13px;
+  resize:none;
+  outline:none;
+  transition: border-color .15s;
+  min-height:42px;
+  max-height:100px;
+}
+.reply-input:focus { border-color: rgba(0,229,255,.4); }
+.reply-input::placeholder { color: var(--muted); }
+.send-btn {
+  width:42px; height:42px;
+  border-radius:8px;
+  border:none;
+  background: var(--accent);
+  color:#000;
+  font-size:18px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: all .15s;
+  flex-shrink:0;
+}
+.send-btn:hover { filter: brightness(1.15); transform: scale(1.05); }
+
+/* ── Right Panel ── */
+.right-panel {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.right-section {
+  padding:16px;
+  border-bottom: 1px solid var(--border);
+}
+.right-section:last-child { border-bottom:none; flex:1; overflow-y:auto; }
+
+/* Customer info */
+.info-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding: 6px 0;
+  font-size:12px;
+  border-bottom: 1px solid var(--border);
+}
+.info-row:last-child { border-bottom:none; }
+.info-key { color: var(--muted2); }
+.info-val { font-family: var(--mono); font-size:11px; }
+
+/* Live feed */
+.live-feed {
+  flex:1;
+  overflow-y:auto;
+}
+.live-feed::-webkit-scrollbar{width:3px}
+.live-feed::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.feed-item {
+  padding:10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size:12px;
+  animation: feedIn .3s ease;
+  cursor:pointer;
+  transition: background .15s;
+}
+.feed-item:hover { background: var(--card); }
+@keyframes feedIn {
+  from { opacity:0; transform:translateX(10px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+.feed-top {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-bottom:3px;
+}
+.feed-platform {
+  font-size:10px;
+  font-family: var(--mono);
+  padding: 1px 5px;
+  border-radius:3px;
+}
+.fp-web     { background: rgba(0,229,255,.1); color: var(--accent); }
+.fp-wa      { background: rgba(37,211,102,.1); color: #25d366; }
+.fp-tg      { background: rgba(41,182,246,.1); color: #29b6f6; }
+
+.feed-msg { color: var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.feed-time { font-family: var(--mono); font-size:10px; color: var(--muted); margin-left:auto; }
+
+/* Train AI panel */
+.train-form { display:flex; flex-direction:column; gap:8px; }
+.form-input {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius:6px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size:12px;
+  outline:none;
+  resize:none;
+  transition: border-color .15s;
+}
+.form-input:focus { border-color: rgba(0,229,255,.4); }
+.form-input::placeholder { color: var(--muted); }
+
+/* Notification toast */
+.toast-container {
+  position:fixed;
+  top:70px; right:20px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:1000;
+}
+.toast {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  padding:10px 16px;
+  border-radius:8px;
+  font-size:12px;
+  animation: slideIn .3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  min-width:250px;
+}
+.toast.success { border-left-color: var(--accent3); }
+.toast.error   { border-left-color: var(--accent2); }
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(20px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Sara<span>AI</span> Dashboard
+  </div>
+  <div class="topbar-right">
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      LIVE
+    </div>
+    <div class="time-display" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Left Sidebar -->
+  <div class="sidebar">
+    <!-- Stats -->
+    <div class="sidebar-section">
+      <div class="section-label">আজকের পরিসংখ্যান</div>
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">TOTAL CHATS</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-num" id="stat-ai">0</div>
+          <div class="stat-label">AI REPLIES</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-num" id="stat-pending">0</div>
+          <div class="stat-label">PENDING</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-num" id="stat-human">0</div>
+          <div class="stat-label">MANUAL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Filter -->
+    <div class="sidebar-section">
+      <div class="section-label">প্ল্যাটফর্ম</div>
+      <div class="platform-list">
+        <div class="platform-item active" onclick="filterPlatform('all', this)">
+          <span><span class="platform-icon">🌐</span>সব</span>
+          <span class="platform-count" id="count-all">0</span>
+        </div>
+        <div class="platform-item" onclick="filterPlatform('web', this)">
+          <span><span class="platform-icon">💻</span>Web</span>
+          <span class="platform-count" id="count-web">0</span>
+        </div>
+        <div class="platform-item" onclick="filterPlatform('whatsapp', this)">
+          <span><span class="platform-icon">📱</span>WhatsApp</span>
+          <span class="platform-count" id="count-wa">0</span>
+        </div>
+        <div class="platform-item" onclick="filterPlatform('telegram', this)">
+          <span><span class="platform-icon">✈️</span>Telegram</span>
+          <span class="platform-count" id="count-tg">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation List -->
+    <div class="section-label" style="padding:12px 16px 4px; font-size:10px; font-family:var(--mono); color:var(--muted); letter-spacing:2px; text-transform:uppercase;">কথোপকথন</div>
+    <div class="conv-list" id="conv-list"></div>
+  </div>
+
+  <!-- Center Chat -->
+  <div class="chat-panel">
+    <!-- Chat Header -->
+    <div class="chat-header" id="chat-header" style="display:none">
+      <div class="chat-header-info">
+        <div class="chat-avatar-lg" id="chat-avatar">👤</div>
+        <div>
+          <div class="chat-name" id="chat-name">—</div>
+          <div class="chat-meta" id="chat-meta">—</div>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <div class="toggle-wrap">
+          <span>AI</span>
+          <label class="toggle">
+            <input type="checkbox" id="ai-toggle" checked onchange="toggleAI(this)">
+            <div class="toggle-slider"></div>
+          </label>
+        </div>
+        <button class="btn btn-ghost" onclick="openTrainPanel()">🧠 ট্রেইন</button>
+        <button class="btn btn-danger" onclick="closeConv()">✕ বন্ধ</button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">💬</div>
+        <div class="empty-text">বাম থেকে একটি কথোপকথন বেছে নিন</div>
+      </div>
+    </div>
+
+    <!-- Reply Box -->
+    <div class="reply-box" id="reply-box" style="display:none">
+      <div class="reply-mode-tabs">
+        <button class="tab-btn active" onclick="setMode('agent', this)">✍️ Manual Reply</button>
+        <button class="tab-btn" onclick="setMode('test', this)">🧪 AI Test</button>
+      </div>
+      <div class="reply-input-row">
+        <textarea class="reply-input" id="reply-input" placeholder="এখানে লিখুন..." rows="1" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" onclick="sendReply()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <!-- Customer Info -->
+    <div class="right-section" id="customer-info-panel">
+      <div class="section-label">কাস্টমার তথ্য</div>
+      <div id="customer-info">
+        <div style="color:var(--muted);font-size:12px;text-align:center;padding:8px">কথোপকথন বেছে নিন</div>
+      </div>
+    </div>
+
+    <!-- Train AI -->
+    <div class="right-section" id="train-panel" style="display:none">
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+        <span>AI ট্রেইন করুন</span>
+        <span onclick="closeTrainPanel()" style="cursor:pointer;color:var(--muted)">✕</span>
+      </div>
+      <div class="train-form">
+        <input class="form-input" id="train-q" placeholder="প্রশ্ন লিখুন...">
+        <textarea class="form-input" id="train-a" placeholder="উত্তর লিখুন..." rows="3"></textarea>
+        <select class="form-input" id="train-cat">
+          <option value="general">সাধারণ</option>
+          <option value="product_info">পণ্য তথ্য</option>
+          <option value="order_tracking">অর্ডার ট্র্যাকিং</option>
+          <option value="refund_return">রিফান্ড/রিটার্ন</option>
+          <option value="saas_support">SaaS সাপোর্ট</option>
+          <option value="payment">পেমেন্ট</option>
+        </select>
+        <button class="btn btn-primary" onclick="trainAI()" style="width:100%;justify-content:center">🧠 শেখাও</button>
+      </div>
+    </div>
+
+    <!-- Live Feed -->
+    <div class="right-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0">
+      <div class="section-label">লাইভ ফিড</div>
+      <div class="live-feed" id="live-feed"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────
+const API = 'http://localhost:8000'; // আপনার VPS IP দিন
+const WS_URL = 'ws://localhost:8000/ws/dashboard';
+
+// ── State ────────────────────────────────────────────────────
+let conversations = [];
+let activeConv = null;
+let replyMode = 'agent';
+let ws = null;
+let platform_filter = 'all';
+
+// ── Demo Data (Backend না থাকলে demo চলবে) ──────────────────
+const DEMO_CONVS = [
+  {
+    id:'CONV-001', customer_id:'wa_01711111111',
+    platform:'whatsapp', phone:'01711111111',
+    ai_enabled:true, status:'active',
+    updated_at: new Date().toISOString(),
+    last_message:{role:'user', content:'আমার অর্ডার কোথায়?', timestamp: new Date().toISOString()},
+    history:[
+      {user:'আমার অর্ডার কোথায়?', assistant:'আপনার অর্ডার ORD-001 বর্তমানে শিপমেন্টে আছে। ট্র্যাকিং নম্বর: TRK-12345 🚚', intent:'order_tracking', language:'bn', timestamp: new Date().toISOString()},
+    ]
+  },
+  {
+    id:'CONV-002', customer_id:'web_user_abc',
+    platform:'web', phone:null,
+    ai_enabled:true, status:'active',
+    updated_at: new Date(Date.now()-120000).toISOString(),
+    last_message:{role:'assistant', content:'আমাদের Power Bank ৳১২০০ তে পাওয়া যাচ্ছে', timestamp: new Date(Date.now()-120000).toISOString()},
+    history:[
+      {user:'Power bank এর দাম কত?', assistant:'আমাদের Power Bank ৳১২০০ তে পাওয়া যাচ্ছে! ১০,০০০mAh ক্যাপাসিটি এবং দ্রুত চার্জিং সাপোর্ট সহ। 🔋', intent:'product_info', language:'bn', timestamp: new Date(Date.now()-120000).toISOString()},
+    ]
+  },
+  {
+    id:'CONV-003', customer_id:'wa_01811111111',
+    platform:'whatsapp_web', phone:'01811111111',
+    ai_enabled:false, status:'active',
+    updated_at: new Date(Date.now()-60000).toISOString(),
+    last_message:{role:'pending', content:'Software login হচ্ছে না help!', timestamp: new Date(Date.now()-60000).toISOString()},
+    history:[
+      {user:'Software login হচ্ছে না help!', assistant:'', intent:'saas_support', language:'bn', timestamp: new Date(Date.now()-60000).toISOString()},
+    ]
+  },
+];
+
+const DEMO_STATS = {
+  total_conversations: 3,
+  active_conversations: 3,
+  ai_replies: 2,
+  human_replies: 0,
+  pending_messages: 1,
+  total_orders: 3,
+  by_platform: {web:1, whatsapp:1, whatsapp_web:1}
+};
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  startClock();
+  await loadStats();
+  await loadConversations();
+  connectWebSocket();
+}
+
+// ── Clock ─────────────────────────────────────────────────────
+function startClock() {
+  const el = document.getElementById('clock');
+  setInterval(() => {
+    el.textContent = new Date().toLocaleTimeString('bn-BD');
+  }, 1000);
+}
+
+// ── Stats ──────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const stats = r.ok ? await r.json() : DEMO_STATS;
+    updateStats(stats);
+  } catch { updateStats(DEMO_STATS); }
+}
+
+function updateStats(stats) {
+  document.getElementById('stat-total').textContent   = stats.total_conversations || 0;
+  document.getElementById('stat-ai').textContent      = stats.ai_replies || 0;
+  document.getElementById('stat-pending').textContent = stats.pending_messages || 0;
+  document.getElementById('stat-human').textContent   = stats.human_replies || 0;
+
+  const p = stats.by_platform || {};
+  document.getElementById('count-all').textContent = stats.total_conversations || 0;
+  document.getElementById('count-web').textContent = p.web || 0;
+  document.getElementById('count-wa').textContent  = (p.whatsapp||0) + (p.whatsapp_web||0);
+  document.getElementById('count-tg').textContent  = p.telegram || 0;
+}
+
+// ── Conversations ─────────────────────────────────────────────
+async function loadConversations() {
+  try {
+    const r = await fetch(`${API}/api/conversations`);
+    conversations = r.ok ? await r.json() : DEMO_CONVS;
+  } catch { conversations = DEMO_CONVS; }
+  renderConversations();
+}
+
+function renderConversations() {
+  const list = document.getElementById('conv-list');
+  let filtered = conversations;
+  if (platform_filter !== 'all') {
+    filtered = conversations.filter(c => c.platform === platform_filter || 
+      (platform_filter === 'whatsapp' && c.platform === 'whatsapp_web'));
+  }
+
+  list.innerHTML = filtered.map(c => {
+    const isPending = c.last_message?.role === 'pending';
+    const isActive  = activeConv?.id === c.id;
+    const avatar    = platformEmoji(c.platform);
+    const name      = c.phone || c.customer_id.substring(0,12);
+    const preview   = c.last_message?.content || '...';
+    const time      = timeAgo(c.updated_at);
+    const aiClass   = c.ai_enabled ? 'ai-on' : 'ai-off';
+    const aiLabel   = c.ai_enabled ? 'AI ON' : 'AI OFF';
+
+    return `<div class="conv-item ${isActive?'active':''} ${isPending?'has-pending':''}" onclick="openConversation('${c.id}')">
+      <div class="conv-header">
+        <div class="conv-avatar">${avatar}</div>
+        <div class="conv-name">${name}</div>
+        <span class="ai-badge ${aiClass}">${aiLabel}</span>
+        <span class="conv-time">${time}</span>
+      </div>
+      <div class="conv-preview">${preview}</div>
+    </div>`;
+  }).join('');
+}
+
+function platformEmoji(p) {
+  if (p === 'whatsapp' || p === 'whatsapp_web') return '📱';
+  if (p === 'telegram') return '✈️';
+  return '💻';
+}
+
+function timeAgo(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60) return 'এখন';
+  if (diff < 3600) return `${Math.floor(diff/60)}মি`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}ঘ`;
+  return `${Math.floor(diff/86400)}দ`;
+}
+
+// ── Open Conversation ─────────────────────────────────────────
+async function openConversation(id) {
+  try {
+    const r = await fetch(`${API}/api/conversations/${id}`);
+    activeConv = r.ok ? await r.json() : conversations.find(c=>c.id===id);
+  } catch {
+    activeConv = conversations.find(c=>c.id===id);
+  }
+  if (!activeConv) return;
+
+  // Update local list
+  const idx = conversations.findIndex(c=>c.id===id);
+  if (idx > -1) conversations[idx] = {...conversations[idx], ...activeConv};
+
+  renderConversations();
+  renderChat();
+  renderCustomerInfo();
+  document.getElementById('chat-header').style.display = 'flex';
+  document.getElementById('reply-box').style.display = 'block';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('ai-toggle').checked = activeConv.ai_enabled !== false;
+}
+
+// ── Render Chat ───────────────────────────────────────────────
+function renderChat() {
+  if (!activeConv) return;
+  const name = activeConv.phone || activeConv.customer_id;
+  const plat = activeConv.platform === 'whatsapp' || activeConv.platform === 'whatsapp_web'
+    ? 'WhatsApp' : activeConv.platform === 'telegram' ? 'Telegram' : 'Web';
+
+  document.getElementById('chat-avatar').textContent = platformEmoji(activeConv.platform);
+  document.getElementById('chat-name').textContent   = name;
+  document.getElementById('chat-meta').textContent   = `${plat} · ${activeConv.id}`;
+
+  const msgs = document.getElementById('messages');
+  const history = activeConv.history || [];
+
+  let html = '';
+  for (const item of history) {
+    if (item.user) {
+      html += msgHTML('user', '👤', item.user, item.timestamp, null, null);
+    }
+    if (item.assistant) {
+      html += msgHTML('ai', '🤖', item.assistant, item.timestamp, item.intent, item.language);
+    }
+  }
+
+  // Pending message
+  if (activeConv.last_message?.role === 'pending') {
+    html += `<div style="text-align:center;padding:8px">
+      <span style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--accent2);padding:4px 12px;border-radius:20px;font-size:11px;font-family:var(--mono)">
+        ⚠️ AI বন্ধ — Agent রিপ্লাই প্রয়োজন
+      </span>
+    </div>`;
+  }
+
+  msgs.innerHTML = html || '<div class="empty-state" style="flex:1"><div class="empty-icon">💬</div><div class="empty-text">কোনো মেসেজ নেই</div></div>';
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function msgHTML(type, avatar, text, time, intent, lang) {
+  const intentTag = intent && intent !== 'general' && intent !== 'error'
+    ? `<span class="intent-tag">${intent}</span>` : '';
+  const langTag = lang ? `<span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${lang}</span>` : '';
+  const timeStr = time ? new Date(time).toLocaleTimeString('bn-BD', {hour:'2-digit',minute:'2-digit'}) : '';
+  const agentClass = type === 'agent' ? 'agent' : type;
+
+  return `<div class="msg-row ${type === 'user' ? 'user' : agentClass}">
+    <div class="msg-avatar">${avatar}</div>
+    <div>
+      <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+      <div class="msg-meta">${timeStr} ${intentTag} ${langTag}</div>
+    </div>
+  </div>`;
+}
+
+// ── Customer Info ─────────────────────────────────────────────
+function renderCustomerInfo() {
+  if (!activeConv) return;
+  document.getElementById('customer-info').innerHTML = `
+    <div class="info-row"><span class="info-key">ID</span><span class="info-val">${activeConv.customer_id}</span></div>
+    <div class="info-row"><span class="info-key">ফোন</span><span class="info-val">${activeConv.phone || 'N/A'}</span></div>
+    <div class="info-row"><span class="info-key">প্ল্যাটফর্ম</span><span class="info-val">${activeConv.platform}</span></div>
+    <div class="info-row"><span class="info-key">Conv ID</span><span class="info-val">${activeConv.id}</span></div>
+    <div class="info-row"><span class="info-key">AI</span><span class="info-val" style="color:${activeConv.ai_enabled?'var(--accent3)':'var(--accent2)'}">${activeConv.ai_enabled?'চালু ✅':'বন্ধ ❌'}</span></div>
+    <div class="info-row"><span class="info-key">মেসেজ</span><span class="info-val">${(activeConv.history||[]).length * 2}</span></div>
+  `;
+}
+
+// ── Send Reply ────────────────────────────────────────────────
+async function sendReply() {
+  const input = document.getElementById('reply-input');
+  const msg = input.value.trim();
+  if (!msg || !activeConv) return;
+  input.value = '';
+
+  if (replyMode === 'agent') {
+    // Manual reply
+    try {
+      const r = await fetch(`${API}/api/manual-reply`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          conversation_id: activeConv.id,
+          message: msg,
+          agent_name: 'Support Agent'
+        })
+      });
+    } catch {}
+
+    // UI তে যোগ করো
+    if (!activeConv.history) activeConv.history = [];
+    activeConv.history.push({
+      user:'', assistant:'', agent: msg,
+      timestamp: new Date().toISOString()
+    });
+
+    // Agent message দেখাও
+    const msgs = document.getElementById('messages');
+    msgs.insertAdjacentHTML('beforeend', msgHTML('agent', '🧑‍💼', msg, new Date().toISOString(), null, null));
+    msgs.scrollTop = msgs.scrollHeight;
+    showToast('রিপ্লাই পাঠানো হয়েছে ✅', 'success');
+
+  } else {
+    // AI Test mode
+    try {
+      const r = await fetch(`${API}/api/chat`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          customer_id: activeConv.customer_id,
+          message: msg,
+          platform: activeConv.platform
+        })
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const msgs = document.getElementById('messages');
+        msgs.insertAdjacentHTML('beforeend', msgHTML('user','👤',msg,new Date().toISOString(),null,null));
+        msgs.insertAdjacentHTML('beforeend', msgHTML('ai','🤖',data.reply,new Date().toISOString(),data.intent,data.language));
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+    } catch {
+      showToast('Backend সংযোগ নেই', 'error');
+    }
+  }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendReply();
+  }
+}
+
+function setMode(mode, el) {
+  replyMode = mode;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('reply-input').placeholder =
+    mode === 'agent' ? 'এজেন্ট হিসেবে রিপ্লাই দিন...' : 'AI টেস্ট করুন...';
+}
+
+// ── AI Toggle ─────────────────────────────────────────────────
+async function toggleAI(el) {
+  if (!activeConv) return;
+  try {
+    await fetch(`${API}/api/toggle-ai`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({conversation_id: activeConv.id, enabled: el.checked})
+    });
+  } catch {}
+  activeConv.ai_enabled = el.checked;
+  const idx = conversations.findIndex(c=>c.id===activeConv.id);
+  if (idx>-1) conversations[idx].ai_enabled = el.checked;
+  renderConversations();
+  renderCustomerInfo();
+  showToast(`AI ${el.checked?'চালু':'বন্ধ'} করা হয়েছে`, el.checked?'success':'error');
+}
+
+// ── Train AI ──────────────────────────────────────────────────
+async function trainAI() {
+  const q = document.getElementById('train-q').value.trim();
+  const a = document.getElementById('train-a').value.trim();
+  const cat = document.getElementById('train-cat').value;
+  if (!q || !a) { showToast('প্রশ্ন ও উত্তর লিখুন', 'error'); return; }
+  try {
+    const r = await fetch(`${API}/api/train`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question:q, answer:a, category:cat})
+    });
+    showToast('AI শিখে গেছে! 🧠✅', 'success');
+    document.getElementById('train-q').value = '';
+    document.getElementById('train-a').value = '';
+  } catch {
+    showToast('Backend সংযোগ নেই', 'error');
+  }
+}
+
+// ── Filter ────────────────────────────────────────────────────
+function filterPlatform(p, el) {
+  platform_filter = p;
+  document.querySelectorAll('.platform-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  renderConversations();
+}
+
+// ── Panel toggle ──────────────────────────────────────────────
+function openTrainPanel() {
+  document.getElementById('train-panel').style.display = 'block';
+  document.getElementById('customer-info-panel').style.display = 'none';
+}
+function closeTrainPanel() {
+  document.getElementById('train-panel').style.display = 'none';
+  document.getElementById('customer-info-panel').style.display = 'block';
+}
+function closeConv() {
+  activeConv = null;
+  document.getElementById('chat-header').style.display = 'none';
+  document.getElementById('reply-box').style.display = 'none';
+  document.getElementById('messages').innerHTML = `<div class="empty-state" id="empty-state"><div class="empty-icon">💬</div><div class="empty-text">বাম থেকে একটি কথোপকথন বেছে নিন</div></div>`;
+  renderConversations();
+}
+
+// ── WebSocket ─────────────────────────────────────────────────
+function connectWebSocket() {
+  try {
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => showToast('Live সংযোগ হয়েছে ✅', 'success');
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      handleLiveEvent(data);
+    };
+    ws.onclose = () => {
+      setTimeout(connectWebSocket, 5000);
+    };
+  } catch {}
+}
+
+function handleLiveEvent(data) {
+  if (data.type === 'init') {
+    updateStats(data.stats);
+    return;
+  }
+
+  // Live feed এ যোগ করো
+  addFeedItem(data);
+
+  // Stats আপডেট
+  loadStats();
+
+  // Conversation list আপডেট
+  if (data.conversation_id) {
+    const idx = conversations.findIndex(c=>c.id===data.conversation_id);
+    if (idx > -1) {
+      conversations[idx].last_message = {
+        role: data.type === 'ai_reply' ? 'assistant' : 'pending',
+        content: data.ai_reply || data.user_message || data.message || '',
+        timestamp: data.timestamp
+      };
+      conversations[idx].updated_at = data.timestamp;
+    } else {
+      // নতুন conversation যোগ করো
+      conversations.unshift({
+        id: data.conversation_id,
+        customer_id: data.customer_id,
+        platform: data.platform || 'web',
+        ai_enabled: data.ai_enabled !== false,
+        status: 'active',
+        updated_at: data.timestamp,
+        last_message: {role:'user', content: data.user_message || data.message || ''},
+        history: []
+      });
+    }
+    renderConversations();
+
+    // Active conversation হলে chat আপডেট করো
+    if (activeConv?.id === data.conversation_id && data.type === 'ai_reply') {
+      const msgs = document.getElementById('messages');
+      msgs.insertAdjacentHTML('beforeend', msgHTML('user','👤',data.user_message,data.timestamp,null,null));
+      msgs.insertAdjacentHTML('beforeend', msgHTML('ai','🤖',data.ai_reply,data.timestamp,data.intent,data.language));
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  }
+
+  // Pending notification
+  if (data.ai_enabled === false || data.type === 'new_message') {
+    showToast(`⚠️ নতুন মেসেজ — Agent প্রয়োজন!`, 'error');
+  }
+}
+
+function addFeedItem(data) {
+  const feed = document.getElementById('live-feed');
+  const plat = data.platform || 'web';
+  const platClass = plat.includes('whatsapp') ? 'fp-wa' : plat === 'telegram' ? 'fp-tg' : 'fp-web';
+  const platLabel = plat.includes('whatsapp') ? 'WA' : plat === 'telegram' ? 'TG' : 'WEB';
+  const msg = data.user_message || data.message || data.ai_reply || '...';
+  const time = new Date(data.timestamp || Date.now()).toLocaleTimeString('bn-BD', {hour:'2-digit',minute:'2-digit'});
+
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.onclick = () => data.conversation_id && openConversation(data.conversation_id);
+  item.innerHTML = `
+    <div class="feed-top">
+      <span class="feed-platform ${platClass}">${platLabel}</span>
+      <span style="font-size:11px;color:var(--muted2)">${data.customer_id || 'Unknown'}</span>
+      <span class="feed-time">${time}</span>
+    </div>
+    <div class="feed-msg">${msg}</div>
+  `;
+  feed.insertBefore(item, feed.firstChild);
+
+  // সর্বোচ্চ ৫০টি রাখো
+  while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type='info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// ── Demo Feed ─────────────────────────────────────────────────
+function startDemoFeed() {
+  // Demo conversations দেখাও
+  DEMO_CONVS.forEach(c => addFeedItem({
+    type:'ai_reply',
+    conversation_id: c.id,
+    customer_id: c.customer_id,
+    platform: c.platform,
+    user_message: c.last_message?.content,
+    timestamp: c.updated_at
+  }));
+}
+
+// ── Start ─────────────────────────────────────────────────────
+init().then(() => startDemoFeed());
+</script>
+</body>
+</html>
