@@ -1,0 +1,30 @@
+# ─── JIS-AI Environment Variables (আপডেট) ───────────────────
+# Railway Dashboard → Variables এ এগুলো দিন
+
+# Anthropic
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# WhatsApp (Meta — ঐচ্ছিক)
+WHATSAPP_TOKEN=
+WHATSAPP_PHONE_ID=
+WHATSAPP_VERIFY_TOKEN=my_secret_verify_token
+
+# Baileys Gateway
+BAILEYS_URL=http://localhost:3001
+BAILEYS_PORT=3001
+AUTH_FOLDER=/data/baileys_auth
+
+# Security
+API_SECRET=your-strong-secret-key-here
+
+# App
+SECRET_KEY=your-app-secret-key
+DEBUG=false
+PORT=8000
+
+# ── নতুন: Novatech-BD সংযোগ (Tool Calling এর জন্য) ──────────
+# Novatech Backend URL (Render/Railway যেখানে deploy করা)
+NOVATECH_API_URL=https://your-novatech-backend.onrender.com
+
+# Novatech এর API_SECRET এর সাথে একই হতে হবে
+NOVATECH_API_SECRET=your-strong-secret-key-here
