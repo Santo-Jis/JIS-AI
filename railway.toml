@@ -1,0 +1,12 @@
+# railway.toml — Railway deployment config
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "bash start.sh"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[volumes]]
+mountPath = "/data"   # Baileys session এখানে save হবে
