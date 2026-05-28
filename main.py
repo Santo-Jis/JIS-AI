@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import asyncio
 import json
+import os
 import uvicorn
 from datetime import datetime
 
@@ -18,6 +19,7 @@ from ai_engine import AIEngine
 from knowledge_base import KnowledgeBase
 from conversation_manager import ConversationManager
 from database import Database
+from whatsapp import send_whatsapp, send_whatsapp_bulk
 
 # ─── App Setup ───────────────────────────────────────────────
 app = FastAPI(
@@ -322,6 +324,56 @@ async def websocket_dashboard(ws: WebSocket):
                 await ws.send_text("pong")
     except WebSocketDisconnect:
         ws_manager.disconnect(ws)
+
+
+# ─── WhatsApp Send ────────────────────────────────────────────
+
+class WhatsAppSendRequest(BaseModel):
+    phone: str
+    message: str
+    api_secret: Optional[str] = None
+
+class WhatsAppBulkRequest(BaseModel):
+    phones: List[str]
+    message: str
+    api_secret: Optional[str] = None
+
+
+@app.post("/send-whatsapp")
+async def whatsapp_send(req: WhatsAppSendRequest):
+    """NovaTech BD বা যেকোনো service থেকে WhatsApp পাঠাতে call করবে।"""
+    if req.api_secret != os.getenv("API_SECRET", "change-this-secret"):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    result = await send_whatsapp(req.phone, req.message)
+
+    if not result.get("success"):
+        raise HTTPException(status_code=503, detail=result.get("error", "WhatsApp পাঠানো যায়নি"))
+
+    return {"status": "sent", "phone": req.phone}
+
+
+@app.post("/send-whatsapp/bulk")
+async def whatsapp_bulk_send(req: WhatsAppBulkRequest):
+    """Manager + Admin সবাইকে একসাথে পাঠাতে।"""
+    if req.api_secret != os.getenv("API_SECRET", "change-this-secret"):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    result = await send_whatsapp_bulk(req.phones, req.message)
+    return {"status": "done", **result}
+
+
+@app.get("/whatsapp/status")
+async def whatsapp_status():
+    """WhatsApp connection status দেখো"""
+    baileys_url = os.getenv("BAILEYS_URL", "http://localhost:3001")
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{baileys_url}/status")
+            return resp.json()
+    except:
+        return {"connected": False, "error": "Baileys gateway reach করা যায়নি"}
 
 
 # ─── Health Check ─────────────────────────────────────────────
