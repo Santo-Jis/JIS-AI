@@ -1,0 +1,3 @@
+# Railway deploy-এ Puppeteer + বাংলা font support
+[phases.setup]
+nixPkgs = ["chromium", "nss", "freetype", "harfbuzz", "ca-certificates", "ttf-lohit-bengali"]
