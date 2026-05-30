@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sara AI — Customer Care Dashboard</title>
+<title>Sara AI — Control Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -17,26 +17,21 @@
   --accent2:  #ff4d6d;
   --accent3:  #39ff14;
   --accent4:  #ffbe0b;
+  --accent5:  #a855f7;
   --text:     #dde6f0;
   --muted:    #5a7080;
   --muted2:   #8aa0b0;
   --font:     'Bricolage Grotesque', sans-serif;
   --mono:     'Fira Code', monospace;
 }
-
 *{margin:0;padding:0;box-sizing:border-box}
-
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  height: 100vh;
+#main-content {
+  display: none;
+  flex: 1;
   overflow: hidden;
-  display: flex;
   flex-direction: column;
 }
-
-/* ── Scanline overlay ── */
+body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 body::after {
   content:'';
   position:fixed;
@@ -51,19 +46,21 @@ body::after {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding: 0 24px;
-  height: 56px;
+  padding: 0 20px;
+  height: 52px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink:0;
+  gap: 12px;
 }
 .logo {
   display:flex;
   align-items:center;
   gap:10px;
-  font-size:18px;
+  font-size:17px;
   font-weight:800;
   letter-spacing:-0.5px;
+  white-space:nowrap;
 }
 .logo-dot {
   width:10px; height:10px;
@@ -78,22 +75,52 @@ body::after {
 }
 .logo span { color: var(--accent); }
 
+/* ── Nav Tabs (top) ── */
+.nav-tabs {
+  display:flex;
+  gap:2px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:8px;
+  padding:3px;
+}
+.nav-tab {
+  padding: 5px 14px;
+  border-radius:6px;
+  font-size:12px;
+  font-family: var(--mono);
+  color: var(--muted2);
+  cursor:pointer;
+  transition: all .15s;
+  white-space:nowrap;
+  border:none;
+  background:transparent;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active {
+  background: rgba(0,229,255,.12);
+  color: var(--accent);
+  border: 1px solid rgba(0,229,255,.25);
+}
+.nav-tab .tab-icon { margin-right:5px; }
+
 .topbar-right {
   display:flex;
   align-items:center;
-  gap:16px;
+  gap:12px;
 }
 .status-badge {
   display:flex;
   align-items:center;
   gap:6px;
-  font-size:12px;
+  font-size:11px;
   font-family: var(--mono);
   color: var(--accent3);
   background: rgba(57,255,20,.08);
   border: 1px solid rgba(57,255,20,.2);
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius:4px;
+  white-space:nowrap;
 }
 .status-dot {
   width:6px; height:6px;
@@ -104,16 +131,32 @@ body::after {
 }
 .time-display {
   font-family: var(--mono);
-  font-size:13px;
+  font-size:12px;
   color: var(--muted2);
+  white-space:nowrap;
 }
 
-/* ── Layout ── */
-.layout {
-  display:grid;
-  grid-template-columns: 260px 1fr 340px;
+/* ── Pages ── */
+.page { display:none; flex:1; overflow:hidden; }
+.page.active { display:flex; }
+
+/* ════════════════════════════════════
+   PAGE: CHAT (original layout)
+════════════════════════════════════ */
+.chat-page {
+  display:none;
   flex:1;
   overflow:hidden;
+  flex-direction:row;
+}
+.chat-page.active { display:flex; }
+
+.layout {
+  display:grid;
+  grid-template-columns: 260px 1fr 320px;
+  flex:1;
+  overflow:hidden;
+  width:100%;
 }
 
 /* ── Left Sidebar ── */
@@ -124,9 +167,8 @@ body::after {
   flex-direction:column;
   overflow:hidden;
 }
-
 .sidebar-section {
-  padding: 16px;
+  padding: 14px;
   border-bottom: 1px solid var(--border);
 }
 .section-label {
@@ -135,20 +177,18 @@ body::after {
   color: var(--muted);
   letter-spacing:2px;
   text-transform:uppercase;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
-
-/* Stats Grid */
 .stats-grid {
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px;
+  gap:6px;
 }
 .stat-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius:8px;
-  padding:12px;
+  padding:10px;
   position:relative;
   overflow:hidden;
 }
@@ -158,75 +198,65 @@ body::after {
   top:0; left:0; right:0;
   height:2px;
 }
-.stat-card.blue::before { background: var(--accent); }
-.stat-card.red::before  { background: var(--accent2); }
-.stat-card.green::before{ background: var(--accent3); }
+.stat-card.blue::before  { background: var(--accent); }
+.stat-card.red::before   { background: var(--accent2); }
+.stat-card.green::before { background: var(--accent3); }
 .stat-card.yellow::before{ background: var(--accent4); }
-
 .stat-num {
-  font-size:24px;
+  font-size:22px;
   font-weight:800;
   font-family: var(--mono);
   line-height:1;
-  margin-bottom:4px;
+  margin-bottom:3px;
 }
 .stat-card.blue .stat-num   { color: var(--accent); }
 .stat-card.red .stat-num    { color: var(--accent2); }
 .stat-card.green .stat-num  { color: var(--accent3); }
 .stat-card.yellow .stat-num { color: var(--accent4); }
+.stat-label { font-size:9px; color: var(--muted2); font-family: var(--mono); }
 
-.stat-label {
-  font-size:10px;
-  color: var(--muted2);
-  font-family: var(--mono);
-}
-
-/* Platform pills */
-.platform-list { display:flex; flex-direction:column; gap:6px; }
+.platform-list { display:flex; flex-direction:column; gap:5px; }
 .platform-item {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border-radius:6px;
   background: var(--card);
   border: 1px solid var(--border);
-  font-size:13px;
+  font-size:12px;
   cursor:pointer;
   transition: all .15s;
 }
-.platform-item:hover, .platform-item.active {
+.platform-item:hover,.platform-item.active {
   border-color: var(--accent);
   background: rgba(0,229,255,.05);
 }
 .platform-item.active { color: var(--accent); }
-.platform-icon { font-size:15px; margin-right:8px; }
+.platform-icon { font-size:14px; margin-right:7px; }
 .platform-count {
   font-family: var(--mono);
-  font-size:11px;
+  font-size:10px;
   color: var(--muted);
   background: var(--border);
-  padding: 2px 7px;
-  border-radius:10px;
+  padding: 2px 6px;
+  border-radius:8px;
 }
-
-/* Conv list */
 .conv-list {
   flex:1;
   overflow-y:auto;
-  padding:8px;
+  padding:6px;
 }
 .conv-list::-webkit-scrollbar{width:3px}
-.conv-list::-webkit-scrollbar-track{background:transparent}
 .conv-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
 .conv-item {
-  padding:12px;
+  padding:10px;
   border-radius:8px;
   border: 1px solid transparent;
   cursor:pointer;
   transition: all .15s;
-  margin-bottom:4px;
+  margin-bottom:3px;
   position:relative;
 }
 .conv-item:hover { background: var(--card); border-color: var(--border); }
@@ -234,29 +264,27 @@ body::after {
 .conv-item.has-pending::after {
   content:'';
   position:absolute;
-  top:10px; right:10px;
-  width:8px; height:8px;
+  top:9px; right:9px;
+  width:7px; height:7px;
   background: var(--accent2);
   border-radius:50%;
   box-shadow: 0 0 8px var(--accent2);
   animation: pulse 1s infinite;
 }
-
-.conv-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.conv-header { display:flex; align-items:center; gap:7px; margin-bottom:3px; }
 .conv-avatar {
-  width:32px; height:32px;
-  border-radius:8px;
+  width:30px; height:30px;
+  border-radius:7px;
   background: var(--border2);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:14px;
+  font-size:13px;
   flex-shrink:0;
 }
-.conv-name { font-size:13px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.conv-name { font-size:12px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .conv-time { font-size:10px; color: var(--muted); font-family: var(--mono); }
-.conv-preview { font-size:12px; color: var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:40px; }
-
+.conv-preview { font-size:11px; color: var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:37px; }
 .ai-badge {
   font-size:9px;
   font-family: var(--mono);
@@ -273,9 +301,8 @@ body::after {
   overflow:hidden;
   background: var(--bg);
 }
-
 .chat-header {
-  padding: 14px 20px;
+  padding: 12px 18px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   display:flex;
@@ -283,34 +310,30 @@ body::after {
   justify-content:space-between;
   flex-shrink:0;
 }
-.chat-header-info { display:flex; align-items:center; gap:12px; }
+.chat-header-info { display:flex; align-items:center; gap:10px; }
 .chat-avatar-lg {
-  width:40px; height:40px;
-  border-radius:10px;
+  width:38px; height:38px;
+  border-radius:9px;
   background: var(--card);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
   border: 1px solid var(--border2);
 }
-.chat-name { font-size:15px; font-weight:700; }
-.chat-meta { font-size:12px; color: var(--muted2); font-family: var(--mono); }
-
-.chat-actions { display:flex; gap:8px; }
-
+.chat-name { font-size:14px; font-weight:700; }
+.chat-meta { font-size:11px; color: var(--muted2); font-family: var(--mono); }
+.chat-actions { display:flex; gap:7px; }
 .btn {
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius:6px;
   border:none;
   cursor:pointer;
-  font-size:12px;
+  font-size:11px;
   font-family: var(--font);
   font-weight:600;
   transition: all .15s;
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:5px;
 }
 .btn-ghost {
   background: var(--card);
@@ -327,34 +350,33 @@ body::after {
 .btn-primary {
   background: var(--accent);
   color: #000;
+  font-weight:700;
 }
 .btn-primary:hover { filter: brightness(1.1); }
+.btn-success {
+  background: rgba(57,255,20,.1);
+  border: 1px solid rgba(57,255,20,.3);
+  color: var(--accent3);
+}
+.btn-purple {
+  background: rgba(168,85,247,.1);
+  border: 1px solid rgba(168,85,247,.3);
+  color: var(--accent5);
+}
 
-/* Toggle switch */
-.toggle-wrap {
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:12px;
-  color: var(--muted2);
-}
-.toggle {
-  position:relative;
-  width:40px; height:22px;
-  cursor:pointer;
-}
+.toggle-wrap { display:flex; align-items:center; gap:7px; font-size:11px; color: var(--muted2); }
+.toggle { position:relative; width:38px; height:20px; cursor:pointer; }
 .toggle input { display:none; }
 .toggle-slider {
-  position:absolute;
-  inset:0;
+  position:absolute; inset:0;
   background: var(--border2);
-  border-radius:11px;
+  border-radius:10px;
   transition:.3s;
 }
 .toggle-slider::before {
   content:'';
   position:absolute;
-  width:16px; height:16px;
+  width:14px; height:14px;
   left:3px; top:3px;
   background: var(--muted);
   border-radius:50%;
@@ -367,49 +389,38 @@ body::after {
   box-shadow: 0 0 8px var(--accent);
 }
 
-/* Messages */
 .messages {
   flex:1;
   overflow-y:auto;
-  padding:20px;
+  padding:18px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:14px;
 }
 .messages::-webkit-scrollbar{width:3px}
 .messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-.msg-row {
-  display:flex;
-  gap:10px;
-  animation: fadeUp .2s ease;
-}
+.msg-row { display:flex; gap:9px; animation: fadeUp .2s ease; }
 @keyframes fadeUp {
   from { opacity:0; transform: translateY(8px); }
   to   { opacity:1; transform: translateY(0); }
 }
 .msg-row.user { flex-direction:row-reverse; }
-
 .msg-avatar {
-  width:30px; height:30px;
-  border-radius:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:14px;
+  width:28px; height:28px;
+  border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px;
   flex-shrink:0;
   background: var(--card);
   border: 1px solid var(--border);
   margin-top:2px;
 }
-
 .msg-bubble {
-  max-width:70%;
-  padding:10px 14px;
-  border-radius:12px;
-  font-size:13.5px;
+  max-width:72%;
+  padding:9px 13px;
+  border-radius:11px;
+  font-size:13px;
   line-height:1.6;
-  position:relative;
 }
 .msg-row.user .msg-bubble {
   background: rgba(0,229,255,.1);
@@ -426,55 +437,37 @@ body::after {
   border: 1px solid rgba(255,190,11,.2);
   border-top-left-radius:3px;
 }
-
 .msg-meta {
-  font-size:10px;
-  color: var(--muted);
+  font-size:10px; color: var(--muted);
   font-family: var(--mono);
-  margin-top:4px;
-  display:flex;
-  align-items:center;
-  gap:6px;
+  margin-top:3px;
+  display:flex; align-items:center; gap:5px;
 }
 .msg-row.user .msg-meta { justify-content: flex-end; }
-
 .intent-tag {
-  font-size:9px;
-  padding: 1px 6px;
-  border-radius:3px;
+  font-size:9px; padding: 1px 6px; border-radius:3px;
   background: rgba(0,229,255,.1);
   color: var(--accent);
   border: 1px solid rgba(0,229,255,.15);
   font-family: var(--mono);
 }
-
-/* Empty state */
 .empty-state {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
-  color: var(--muted);
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:10px; color: var(--muted);
 }
-.empty-icon { font-size:48px; opacity:.3; }
-.empty-text { font-size:14px; }
+.empty-icon { font-size:44px; opacity:.3; }
+.empty-text { font-size:13px; }
 
-/* Reply Box */
 .reply-box {
-  padding:16px 20px;
+  padding:14px 18px;
   background: var(--surface);
   border-top: 1px solid var(--border);
   flex-shrink:0;
 }
-.reply-mode-tabs {
-  display:flex;
-  gap:4px;
-  margin-bottom:10px;
-}
+.reply-mode-tabs { display:flex; gap:4px; margin-bottom:9px; }
 .tab-btn {
-  padding: 4px 12px;
+  padding: 4px 11px;
   border-radius:5px;
   border: 1px solid var(--border);
   background: transparent;
@@ -489,40 +482,32 @@ body::after {
   border-color: rgba(0,229,255,.3);
   color: var(--accent);
 }
-.reply-input-row {
-  display:flex;
-  gap:10px;
-}
+.reply-input-row { display:flex; gap:9px; }
 .reply-input {
   flex:1;
   background: var(--card);
   border: 1px solid var(--border2);
   border-radius:8px;
-  padding: 10px 14px;
+  padding: 9px 13px;
   color: var(--text);
   font-family: var(--font);
-  font-size:13px;
+  font-size:12px;
   resize:none;
   outline:none;
   transition: border-color .15s;
-  min-height:42px;
-  max-height:100px;
+  min-height:40px;
+  max-height:90px;
 }
 .reply-input:focus { border-color: rgba(0,229,255,.4); }
 .reply-input::placeholder { color: var(--muted); }
 .send-btn {
-  width:42px; height:42px;
-  border-radius:8px;
-  border:none;
+  width:40px; height:40px;
+  border-radius:8px; border:none;
   background: var(--accent);
-  color:#000;
-  font-size:18px;
+  color:#000; font-size:16px;
   cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition: all .15s;
-  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition: all .15s; flex-shrink:0;
 }
 .send-btn:hover { filter: brightness(1.15); transform: scale(1.05); }
 
@@ -534,36 +519,27 @@ body::after {
   flex-direction:column;
   overflow:hidden;
 }
-
 .right-section {
-  padding:16px;
+  padding:14px;
   border-bottom: 1px solid var(--border);
 }
 .right-section:last-child { border-bottom:none; flex:1; overflow-y:auto; }
-
-/* Customer info */
 .info-row {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding: 6px 0;
+  padding: 5px 0;
   font-size:12px;
   border-bottom: 1px solid var(--border);
 }
 .info-row:last-child { border-bottom:none; }
 .info-key { color: var(--muted2); }
 .info-val { font-family: var(--mono); font-size:11px; }
-
-/* Live feed */
-.live-feed {
-  flex:1;
-  overflow-y:auto;
-}
+.live-feed { flex:1; overflow-y:auto; }
 .live-feed::-webkit-scrollbar{width:3px}
 .live-feed::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
 .feed-item {
-  padding:10px 16px;
+  padding:9px 14px;
   border-bottom: 1px solid var(--border);
   font-size:12px;
   animation: feedIn .3s ease;
@@ -575,70 +551,575 @@ body::after {
   from { opacity:0; transform:translateX(10px); }
   to   { opacity:1; transform:translateX(0); }
 }
-.feed-top {
-  display:flex;
-  align-items:center;
-  gap:6px;
-  margin-bottom:3px;
-}
-.feed-platform {
-  font-size:10px;
-  font-family: var(--mono);
-  padding: 1px 5px;
-  border-radius:3px;
-}
-.fp-web     { background: rgba(0,229,255,.1); color: var(--accent); }
-.fp-wa      { background: rgba(37,211,102,.1); color: #25d366; }
-.fp-tg      { background: rgba(41,182,246,.1); color: #29b6f6; }
-
+.feed-top { display:flex; align-items:center; gap:5px; margin-bottom:3px; }
+.feed-platform { font-size:10px; font-family: var(--mono); padding: 1px 5px; border-radius:3px; }
+.fp-web { background: rgba(0,229,255,.1); color: var(--accent); }
+.fp-wa  { background: rgba(37,211,102,.1); color: #25d366; }
+.fp-tg  { background: rgba(41,182,246,.1); color: #29b6f6; }
 .feed-msg { color: var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .feed-time { font-family: var(--mono); font-size:10px; color: var(--muted); margin-left:auto; }
 
-/* Train AI panel */
-.train-form { display:flex; flex-direction:column; gap:8px; }
+/* ════════════════════════════════════
+   PAGE: KNOWLEDGE BASE
+════════════════════════════════════ */
+.kb-page {
+  display:none;
+  flex:1;
+  overflow:hidden;
+  flex-direction:column;
+}
+.kb-page.active { display:flex; }
+
+.page-header {
+  padding: 20px 24px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.page-title { font-size:18px; font-weight:800; }
+.page-subtitle { font-size:12px; color: var(--muted2); font-family: var(--mono); margin-top:2px; }
+
+.kb-layout {
+  display:grid;
+  grid-template-columns: 380px 1fr;
+  flex:1;
+  overflow:hidden;
+}
+
+.kb-add-panel {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.kb-add-panel::-webkit-scrollbar{width:3px}
+
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-label { font-size:11px; font-family: var(--mono); color: var(--muted2); letter-spacing:1px; text-transform:uppercase; }
 .form-input {
   background: var(--card);
   border: 1px solid var(--border2);
-  border-radius:6px;
-  padding: 8px 12px;
+  border-radius:7px;
+  padding: 9px 13px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size:13px;
+  outline:none;
+  resize:vertical;
+  transition: border-color .15s;
+  width:100%;
+}
+.form-input:focus { border-color: rgba(0,229,255,.4); }
+.form-input::placeholder { color: var(--muted); }
+select.form-input { cursor:pointer; }
+select.form-input option { background: var(--card); }
+
+.kb-list-panel {
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background: var(--bg);
+}
+.kb-toolbar {
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+.search-input {
+  flex:1;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius:7px;
+  padding: 7px 13px;
   color: var(--text);
   font-family: var(--font);
   font-size:12px;
   outline:none;
-  resize:none;
   transition: border-color .15s;
 }
-.form-input:focus { border-color: rgba(0,229,255,.4); }
-.form-input::placeholder { color: var(--muted); }
+.search-input:focus { border-color: rgba(0,229,255,.4); }
+.search-input::placeholder { color: var(--muted); }
+.filter-select {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius:7px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size:11px;
+  outline:none;
+  cursor:pointer;
+  min-width:130px;
+}
+.filter-select option { background: var(--card); }
 
-/* Notification toast */
-.toast-container {
-  position:fixed;
-  top:70px; right:20px;
+.kb-items {
+  flex:1;
+  overflow-y:auto;
+  padding: 16px 20px;
   display:flex;
   flex-direction:column;
+  gap:10px;
+}
+.kb-items::-webkit-scrollbar{width:3px}
+.kb-items::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.kb-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:10px;
+  padding: 14px 16px;
+  transition: all .15s;
+  animation: fadeUp .2s ease;
+}
+.kb-item:hover { border-color: var(--border2); }
+.kb-item-header {
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:8px;
+}
+.kb-item-q {
+  flex:1;
+  font-size:13px;
+  font-weight:600;
+  color: var(--text);
+  line-height:1.4;
+}
+.kb-item-meta {
+  display:flex;
+  align-items:center;
   gap:8px;
-  z-index:1000;
+  flex-shrink:0;
+}
+.cat-badge {
+  font-size:10px;
+  font-family: var(--mono);
+  padding: 2px 8px;
+  border-radius:4px;
+}
+.cat-general     { background: rgba(138,160,176,.1); color: var(--muted2); border:1px solid rgba(138,160,176,.2); }
+.cat-product_info{ background: rgba(0,229,255,.1);   color: var(--accent);  border:1px solid rgba(0,229,255,.2); }
+.cat-order_tracking { background: rgba(255,190,11,.1); color: var(--accent4); border:1px solid rgba(255,190,11,.2); }
+.cat-refund_return  { background: rgba(255,77,109,.1); color: var(--accent2); border:1px solid rgba(255,77,109,.2); }
+.cat-saas_support   { background: rgba(168,85,247,.1); color: var(--accent5); border:1px solid rgba(168,85,247,.2); }
+.cat-payment        { background: rgba(57,255,20,.1);  color: var(--accent3); border:1px solid rgba(57,255,20,.2); }
+
+.lang-badge {
+  font-size:10px;
+  font-family: var(--mono);
+  padding: 2px 6px;
+  border-radius:4px;
+  background: var(--border);
+  color: var(--muted2);
+}
+.kb-item-a {
+  font-size:12px;
+  color: var(--muted2);
+  line-height:1.6;
+  border-top: 1px solid var(--border);
+  padding-top:8px;
+  margin-top:4px;
+}
+.kb-item-actions {
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+}
+.kb-btn {
+  padding: 4px 10px;
+  border-radius:5px;
+  border:none;
+  cursor:pointer;
+  font-size:11px;
+  font-family: var(--font);
+  transition: all .15s;
+}
+.kb-btn-edit {
+  background: rgba(0,229,255,.1);
+  color: var(--accent);
+  border: 1px solid rgba(0,229,255,.2);
+}
+.kb-btn-edit:hover { background: rgba(0,229,255,.2); }
+.kb-btn-del {
+  background: rgba(255,77,109,.1);
+  color: var(--accent2);
+  border: 1px solid rgba(255,77,109,.2);
+}
+.kb-btn-del:hover { background: rgba(255,77,109,.2); }
+
+/* ════════════════════════════════════
+   PAGE: WHATSAPP STATUS
+════════════════════════════════════ */
+.wa-page {
+  display:none;
+  flex:1;
+  overflow:hidden;
+  flex-direction:column;
+}
+.wa-page.active { display:flex; }
+
+.wa-content {
+  flex:1;
+  overflow-y:auto;
+  padding: 24px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.wa-content::-webkit-scrollbar{width:3px}
+
+.wa-grid {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:16px;
+}
+.wa-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  transition: all .2s;
+}
+.wa-card:hover { border-color: var(--border2); }
+.wa-card-title {
+  font-size:12px;
+  font-family: var(--mono);
+  color: var(--muted2);
+  letter-spacing:1px;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.wa-status-big {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+.wa-status-dot {
+  width:14px; height:14px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.connected .wa-status-dot   { background: var(--accent3); box-shadow: 0 0 12px var(--accent3); animation: pulse 2s infinite; }
+.disconnected .wa-status-dot { background: var(--accent2); box-shadow: 0 0 12px var(--accent2); }
+.wa-status-text { font-size:20px; font-weight:800; }
+.connected .wa-status-text   { color: var(--accent3); }
+.disconnected .wa-status-text { color: var(--accent2); }
+.wa-stat-num { font-size:28px; font-weight:800; font-family: var(--mono); color: var(--accent); }
+.wa-stat-sub { font-size:11px; color: var(--muted2); margin-top:4px; }
+
+.wa-send-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:20px;
+}
+.wa-send-title {
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:14px;
+  grid-column: span 2;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.wa-send-title::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background: var(--border);
+}
+
+.wa-log {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+}
+.wa-log-title {
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.wa-log-list {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  max-height:200px;
+  overflow-y:auto;
+}
+.wa-log-list::-webkit-scrollbar{width:3px}
+.wa-log-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 8px 12px;
+  border-radius:7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size:12px;
+}
+.wa-log-icon { font-size:14px; flex-shrink:0; }
+.wa-log-phone { font-family: var(--mono); font-size:11px; color: var(--muted2); }
+.wa-log-msg { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.wa-log-time { font-family: var(--mono); font-size:10px; color: var(--muted); flex-shrink:0; }
+.wa-log-status { font-size:10px; font-family: var(--mono); padding:2px 6px; border-radius:3px; flex-shrink:0; }
+.log-sent { background: rgba(57,255,20,.1); color: var(--accent3); border:1px solid rgba(57,255,20,.2); }
+.log-fail { background: rgba(255,77,109,.1); color: var(--accent2); border:1px solid rgba(255,77,109,.2); }
+
+/* ════════════════════════════════════
+   PAGE: SETTINGS
+════════════════════════════════════ */
+.settings-page {
+  display:none;
+  flex:1;
+  overflow:hidden;
+  flex-direction:column;
+}
+.settings-page.active { display:flex; }
+
+.settings-content {
+  flex:1;
+  overflow-y:auto;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.settings-content::-webkit-scrollbar{width:3px}
+
+.settings-grid {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:16px;
+}
+.settings-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+}
+.settings-card-title {
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-bottom:12px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-card-title .title-icon { font-size:16px; }
+
+.settings-group { display:flex; flex-direction:column; gap:12px; }
+.settings-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.settings-label {
+  font-size:12px;
+  color: var(--muted2);
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.settings-label-main { color: var(--text); font-size:13px; font-weight:500; }
+.settings-label-sub { font-size:11px; color: var(--muted); }
+
+.settings-input {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius:7px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size:12px;
+  outline:none;
+  transition: border-color .15s;
+  width:220px;
+}
+.settings-input:focus { border-color: rgba(0,229,255,.4); }
+.settings-input.secret { color: var(--muted2); letter-spacing: 3px; }
+.settings-input.secret:focus { letter-spacing: normal; }
+
+.settings-select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius:7px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size:12px;
+  outline:none;
+  cursor:pointer;
+  width:220px;
+}
+.settings-select option { background: var(--card); }
+
+.settings-toggle-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.settings-toggle-row:last-child { border-bottom:none; }
+
+.settings-divider {
+  height:1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.save-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding:14px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-shrink:0;
+}
+.save-indicator {
+  font-size:12px;
+  font-family: var(--mono);
+  color: var(--muted);
+  flex:1;
+}
+.save-indicator.saved { color: var(--accent3); }
+
+/* ── Shared ── */
+.divider-label {
+  font-size:11px;
+  font-family: var(--mono);
+  color: var(--muted);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.divider-label::before, .divider-label::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background: var(--border);
+}
+.badge-count {
+  font-size:10px;
+  font-family: var(--mono);
+  padding: 1px 6px;
+  border-radius:8px;
+  background: rgba(0,229,255,.1);
+  color: var(--accent);
+  border: 1px solid rgba(0,229,255,.2);
+  margin-left:6px;
+}
+
+/* ── Train panel (in chat right sidebar) ── */
+.train-form { display:flex; flex-direction:column; gap:7px; }
+
+/* ── Toast ── */
+.toast-container {
+  position:fixed;
+  top:65px; right:18px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  z-index:10000;
 }
 .toast {
   background: var(--card);
   border: 1px solid var(--border2);
   border-left: 3px solid var(--accent);
-  padding:10px 16px;
+  padding:10px 15px;
   border-radius:8px;
   font-size:12px;
   animation: slideIn .3s ease;
   box-shadow: 0 4px 20px rgba(0,0,0,.4);
-  min-width:250px;
+  min-width:240px;
+  max-width:320px;
 }
 .toast.success { border-left-color: var(--accent3); }
 .toast.error   { border-left-color: var(--accent2); }
+.toast.warn    { border-left-color: var(--accent4); }
 @keyframes slideIn {
   from { opacity:0; transform:translateX(20px); }
   to   { opacity:1; transform:translateX(0); }
 }
 
-/* Scrollbars */
+/* ── Modal ── */
+.modal-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  z-index:5000;
+  align-items:center;
+  justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius:14px;
+  padding:24px;
+  min-width:420px;
+  max-width:520px;
+  animation: modalIn .2s ease;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+@keyframes modalIn {
+  from { opacity:0; transform:scale(.95) translateY(-10px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+.modal-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.modal-title { font-size:16px; font-weight:700; }
+.modal-close {
+  width:28px; height:28px;
+  border-radius:6px;
+  border:none;
+  background: var(--card);
+  color: var(--muted2);
+  cursor:pointer;
+  font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition: all .15s;
+}
+.modal-close:hover { background: var(--border2); color: var(--text); }
+.modal-body { display:flex; flex-direction:column; gap:12px; }
+.modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+
 ::-webkit-scrollbar { width:3px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
@@ -646,142 +1127,461 @@ body::after {
 </head>
 <body>
 
-<!-- Top Bar -->
-<div class="topbar">
+<!-- ════════════════════
+     LOGIN SCREEN
+════════════════════ -->
+<div id="login-screen" style="position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(0,229,255,.06) 0%,transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(168,85,247,.06) 0%,transparent 60%);pointer-events:none"></div>
+
+  <!-- Logo -->
+  <div style="text-align:center;margin-bottom:40px;animation:fadeUp .5s ease">
+    <div style="width:60px;height:60px;border-radius:16px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px">🤖</div>
+    <div style="font-size:28px;font-weight:800;letter-spacing:-1px">Sara<span style="color:var(--accent)">AI</span></div>
+    <div style="font-size:12px;font-family:var(--mono);color:var(--muted2);margin-top:5px">Control Center — v2.0</div>
+  </div>
+
+  <!-- Login Card -->
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:360px;animation:fadeUp .5s ease .1s both;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">স্বাগতম 👋</div>
+    <div style="font-size:12px;color:var(--muted2);margin-bottom:24px;font-family:var(--mono)">Dashboard এ প্রবেশ করতে লগইন করুন</div>
+
+    <div id="login-error" style="display:none;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--accent2);padding:9px 13px;border-radius:7px;font-size:12px;margin-bottom:14px">❌ ভুল ইউজারনেম বা পাসওয়ার্ড</div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">ইউজারনেম</div>
+        <input id="login-user" class="form-input" placeholder="admin" style="width:100%" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      </div>
+      <div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">পাসওয়ার্ড</div>
+        <div style="position:relative">
+          <input id="login-pass" type="password" class="form-input" placeholder="••••••••" style="width:100%;padding-right:40px" onkeydown="if(event.key==='Enter')doLogin()">
+          <button onclick="togglePassVis()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px" id="pass-eye">👁</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted2)">
+          <input type="checkbox" id="remember-me" style="accent-color:var(--accent)"> মনে রাখো
+        </label>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">ডিফল্ট: admin / admin123</span>
+      </div>
+      <button onclick="doLogin()" style="margin-top:6px;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#000;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px" id="login-btn">
+        <span id="login-btn-text">🔐 লগইন করুন</span>
+      </button>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:center">
+      <div class="demo-role-btn" onclick="quickLogin('admin','admin123','Admin')">👑 Admin</div>
+      <div class="demo-role-btn" onclick="quickLogin('agent','agent123','Agent')">🧑‍💼 Agent</div>
+      <div class="demo-role-btn" onclick="quickLogin('viewer','viewer123','Viewer')">👀 Viewer</div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;font-size:11px;color:var(--muted);font-family:var(--mono);animation:fadeUp .5s ease .2s both">
+    Sara AI © 2025 — JIS Technology
+  </div>
+</div>
+
+<style>
+.demo-role-btn {
+  padding: 6px 14px;
+  border-radius:6px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  font-size:11px;
+  cursor:pointer;
+  color:var(--muted2);
+  transition: all .15s;
+  font-family:var(--mono);
+}
+.demo-role-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* Notification Panel */
+.notif-panel {
+  position:fixed;
+  top:56px; right:14px;
+  width:360px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  z-index:9000;
+  display:none;
+  flex-direction:column;
+  max-height:480px;
+  overflow:hidden;
+  animation:slideIn .2s ease;
+}
+.notif-panel.open { display:flex; }
+.notif-header {
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.notif-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.notif-list { overflow-y:auto; flex:1; }
+.notif-list::-webkit-scrollbar{width:3px}
+.notif-item {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background .15s;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  position:relative;
+}
+.notif-item:hover { background:var(--card); }
+.notif-item.unread::before {
+  content:'';
+  position:absolute;
+  left:6px; top:50%; transform:translateY(-50%);
+  width:5px; height:5px;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 6px var(--accent);
+}
+.notif-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.notif-body { flex:1; }
+.notif-msg { font-size:12px; line-height:1.5; }
+.notif-time { font-size:10px; color:var(--muted); font-family:var(--mono); margin-top:3px; }
+.notif-footer {
+  padding:10px 16px;
+  border-top:1px solid var(--border);
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-shrink:0;
+}
+
+/* User Menu */
+.user-menu-wrap { position:relative; }
+.user-btn {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 10px;
+  border-radius:7px;
+  background:var(--card);
+  border:1px solid var(--border2);
+  cursor:pointer;
+  transition:all .15s;
+  font-size:12px;
+}
+.user-btn:hover { border-color:var(--accent); }
+.user-avatar {
+  width:26px; height:26px;
+  border-radius:7px;
+  background:rgba(0,229,255,.15);
+  border:1px solid rgba(0,229,255,.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+}
+.user-dropdown {
+  position:absolute;
+  top:calc(100% + 6px);
+  right:0;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  min-width:200px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  display:none;
+  z-index:9000;
+  overflow:hidden;
+  animation:slideIn .15s ease;
+}
+.user-dropdown.open { display:block; }
+.ud-header { padding:12px 14px; border-bottom:1px solid var(--border); }
+.ud-name { font-size:13px; font-weight:700; }
+.ud-role { font-size:10px; font-family:var(--mono); color:var(--muted2); margin-top:2px; }
+.ud-item {
+  padding:9px 14px;
+  font-size:12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:background .15s;
+  color:var(--muted2);
+}
+.ud-item:hover { background:var(--card); color:var(--text); }
+.ud-item.danger { color:var(--accent2); }
+.ud-item.danger:hover { background:rgba(255,77,109,.08); }
+.ud-divider { height:1px; background:var(--border); margin:4px 0; }
+
+/* Notif Badge */
+.notif-badge {
+  position:absolute;
+  top:-4px; right:-4px;
+  width:16px; height:16px;
+  border-radius:50%;
+  background:var(--accent2);
+  color:#fff;
+  font-size:9px;
+  font-family:var(--mono);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 8px var(--accent2);
+  display:none;
+}
+.notif-btn-wrap { position:relative; cursor:pointer; }
+.notif-icon-btn {
+  width:32px; height:32px;
+  border-radius:7px;
+  background:var(--card);
+  border:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px;
+  transition:all .15s;
+}
+.notif-icon-btn:hover { border-color:var(--accent); }
+
+/* Role Badges */
+.role-admin  { color:var(--accent4); background:rgba(255,190,11,.1); border:1px solid rgba(255,190,11,.2); }
+.role-agent  { color:var(--accent);  background:rgba(0,229,255,.1);  border:1px solid rgba(0,229,255,.2); }
+.role-viewer { color:var(--accent5); background:rgba(168,85,247,.1); border:1px solid rgba(168,85,247,.2); }
+.role-badge  { font-size:10px; font-family:var(--mono); padding:2px 7px; border-radius:4px; }
+</style>
+
+<!-- ── Top Bar ── -->
+<div class="topbar" id="main-topbar" style="display:none">
   <div class="logo">
     <div class="logo-dot"></div>
-    Sara<span>AI</span> Dashboard
+    Sara<span>AI</span>
   </div>
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('chat', this)"><span class="tab-icon">💬</span>চ্যাট</button>
+    <button class="nav-tab" onclick="showPage('kb', this)"><span class="tab-icon">🧠</span>Knowledge Base</button>
+    <button class="nav-tab" onclick="showPage('wa', this)"><span class="tab-icon">📱</span>WhatsApp</button>
+    <button class="nav-tab" onclick="showPage('analytics', this)"><span class="tab-icon">📊</span>Analytics</button>
+    <button class="nav-tab" onclick="showPage('orders', this)"><span class="tab-icon">📦</span>Orders</button>
+    <button class="nav-tab" id="settings-tab" onclick="showPage('settings', this)"><span class="tab-icon">⚙️</span>Settings</button>
+  </div>
+
   <div class="topbar-right">
     <div class="status-badge">
       <div class="status-dot"></div>
       LIVE
     </div>
     <div class="time-display" id="clock">--:--:--</div>
+
+    <!-- Notification Bell -->
+    <div class="notif-btn-wrap" onclick="toggleNotifPanel()">
+      <div class="notif-icon-btn">🔔</div>
+      <div class="notif-badge" id="notif-badge">0</div>
+    </div>
+
+    <!-- User Menu -->
+    <div class="user-menu-wrap" id="user-menu-wrap">
+      <div class="user-btn" onclick="toggleUserMenu()">
+        <div class="user-avatar" id="user-avatar-btn">👤</div>
+        <span id="user-display-name" style="font-family:var(--mono)">—</span>
+        <span class="role-badge" id="user-role-badge">—</span>
+        <span style="color:var(--muted);font-size:10px">▾</span>
+      </div>
+      <div class="user-dropdown" id="user-dropdown">
+        <div class="ud-header">
+          <div class="ud-name" id="ud-name">—</div>
+          <div class="ud-role" id="ud-role">—</div>
+        </div>
+        <div class="ud-item" onclick="showPage('settings', document.getElementById('settings-tab'))">⚙️ সেটিংস</div>
+        <div class="ud-item" onclick="changePassword()">🔑 পাসওয়ার্ড পরিবর্তন</div>
+        <div class="ud-divider"></div>
+        <div class="ud-item danger" onclick="doLogout()">🚪 লগআউট</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Layout -->
-<div class="layout">
+<!-- ════════════════════
+     PAGE: CHAT
+════════════════════ -->
+<!-- Notification Panel -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-header">
+    <div class="notif-title">🔔 Notifications <span id="notif-count" class="badge-count">0</span></div>
+    <button class="kb-btn" onclick="clearNotifs()" style="font-size:11px;background:rgba(255,77,109,.1);color:var(--accent2);border:1px solid rgba(255,77,109,.2)">সব মুছুন</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">🔔 কোনো notification নেই</div>
+  </div>
+  <div class="notif-footer">
+    <button class="btn btn-ghost" style="font-size:11px;padding:5px 14px" onclick="markAllRead();toggleNotifPanel()">✓ সব পড়া হয়েছে</button>
+  </div>
+</div>
 
-  <!-- Left Sidebar -->
-  <div class="sidebar">
-    <!-- Stats -->
-    <div class="sidebar-section">
-      <div class="section-label">আজকের পরিসংখ্যান</div>
-      <div class="stats-grid">
-        <div class="stat-card blue">
-          <div class="stat-num" id="stat-total">0</div>
-          <div class="stat-label">TOTAL CHATS</div>
+<!-- Main Content -->
+<div id="main-content" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+
+<div class="chat-page active" id="page-chat">
+  <div class="layout">
+
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-label">পরিসংখ্যান</div>
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">TOTAL CHATS</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-num" id="stat-ai">0</div>
+            <div class="stat-label">AI REPLIES</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-num" id="stat-pending">0</div>
+            <div class="stat-label">PENDING</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-num" id="stat-human">0</div>
+            <div class="stat-label">MANUAL</div>
+          </div>
         </div>
-        <div class="stat-card green">
-          <div class="stat-num" id="stat-ai">0</div>
-          <div class="stat-label">AI REPLIES</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-label">প্ল্যাটফর্ম</div>
+        <div class="platform-list">
+          <div class="platform-item active" onclick="filterPlatform('all',this)">
+            <span><span class="platform-icon">🌐</span>সব</span>
+            <span class="platform-count" id="count-all">0</span>
+          </div>
+          <div class="platform-item" onclick="filterPlatform('web',this)">
+            <span><span class="platform-icon">💻</span>Web</span>
+            <span class="platform-count" id="count-web">0</span>
+          </div>
+          <div class="platform-item" onclick="filterPlatform('whatsapp',this)">
+            <span><span class="platform-icon">📱</span>WhatsApp</span>
+            <span class="platform-count" id="count-wa">0</span>
+          </div>
+          <div class="platform-item" onclick="filterPlatform('telegram',this)">
+            <span><span class="platform-icon">✈️</span>Telegram</span>
+            <span class="platform-count" id="count-tg">0</span>
+          </div>
         </div>
-        <div class="stat-card yellow">
-          <div class="stat-num" id="stat-pending">0</div>
-          <div class="stat-label">PENDING</div>
+      </div>
+      <div class="section-label" style="padding:10px 14px 3px;font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:2px;text-transform:uppercase;">কথোপকথন</div>
+      <div class="conv-list" id="conv-list"></div>
+    </div>
+
+    <!-- Center Chat -->
+    <div class="chat-panel">
+      <div class="chat-header" id="chat-header" style="display:none">
+        <div class="chat-header-info">
+          <div class="chat-avatar-lg" id="chat-avatar">👤</div>
+          <div>
+            <div class="chat-name" id="chat-name">—</div>
+            <div class="chat-meta" id="chat-meta">—</div>
+          </div>
         </div>
-        <div class="stat-card red">
-          <div class="stat-num" id="stat-human">0</div>
-          <div class="stat-label">MANUAL</div>
+        <div class="chat-actions">
+          <div class="toggle-wrap">
+            <span>AI</span>
+            <label class="toggle">
+              <input type="checkbox" id="ai-toggle" checked onchange="toggleAI(this)">
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+          <button class="btn btn-ghost" onclick="openTrainPanel()">🧠 ট্রেইন</button>
+          <button class="btn btn-danger" onclick="closeConv()">✕</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-text">বাম থেকে একটি কথোপকথন বেছে নিন</div>
+        </div>
+      </div>
+
+      <div class="reply-box" id="reply-box" style="display:none">
+        <div class="reply-mode-tabs">
+          <button class="tab-btn active" onclick="setMode('agent',this)">✍️ Manual Reply</button>
+          <button class="tab-btn" onclick="setMode('test',this)">🧪 AI Test</button>
+        </div>
+        <div class="reply-input-row">
+          <textarea class="reply-input" id="reply-input" placeholder="এখানে লিখুন..." rows="1" onkeydown="handleKey(event)"></textarea>
+          <button class="send-btn" onclick="sendReply()">➤</button>
         </div>
       </div>
     </div>
 
-    <!-- Platform Filter -->
-    <div class="sidebar-section">
-      <div class="section-label">প্ল্যাটফর্ম</div>
-      <div class="platform-list">
-        <div class="platform-item active" onclick="filterPlatform('all', this)">
-          <span><span class="platform-icon">🌐</span>সব</span>
-          <span class="platform-count" id="count-all">0</span>
-        </div>
-        <div class="platform-item" onclick="filterPlatform('web', this)">
-          <span><span class="platform-icon">💻</span>Web</span>
-          <span class="platform-count" id="count-web">0</span>
-        </div>
-        <div class="platform-item" onclick="filterPlatform('whatsapp', this)">
-          <span><span class="platform-icon">📱</span>WhatsApp</span>
-          <span class="platform-count" id="count-wa">0</span>
-        </div>
-        <div class="platform-item" onclick="filterPlatform('telegram', this)">
-          <span><span class="platform-icon">✈️</span>Telegram</span>
-          <span class="platform-count" id="count-tg">0</span>
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="right-section" id="customer-info-panel">
+        <div class="section-label">কাস্টমার তথ্য</div>
+        <div id="customer-info">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:8px">কথোপকথন বেছে নিন</div>
         </div>
       </div>
-    </div>
 
-    <!-- Conversation List -->
-    <div class="section-label" style="padding:12px 16px 4px; font-size:10px; font-family:var(--mono); color:var(--muted); letter-spacing:2px; text-transform:uppercase;">কথোপকথন</div>
-    <div class="conv-list" id="conv-list"></div>
+      <div class="right-section" id="train-panel" style="display:none">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>AI ট্রেইন</span>
+          <span onclick="closeTrainPanel()" style="cursor:pointer;color:var(--muted);font-size:14px">✕</span>
+        </div>
+        <div class="train-form">
+          <input class="form-input" style="font-size:12px;padding:8px 11px" id="train-q" placeholder="প্রশ্ন লিখুন...">
+          <textarea class="form-input" style="font-size:12px;padding:8px 11px" id="train-a" placeholder="উত্তর লিখুন..." rows="3"></textarea>
+          <select class="form-input" style="font-size:12px;padding:8px 11px" id="train-cat">
+            <option value="general">সাধারণ</option>
+            <option value="product_info">পণ্য তথ্য</option>
+            <option value="order_tracking">অর্ডার ট্র্যাকিং</option>
+            <option value="refund_return">রিফান্ড/রিটার্ন</option>
+            <option value="saas_support">SaaS সাপোর্ট</option>
+            <option value="payment">পেমেন্ট</option>
+          </select>
+          <button class="btn btn-primary" onclick="trainAI()" style="justify-content:center">🧠 শেখাও</button>
+        </div>
+      </div>
+
+      <div class="right-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0">
+        <div class="section-label">লাইভ ফিড</div>
+        <div class="live-feed" id="live-feed"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════
+     PAGE: KNOWLEDGE BASE
+════════════════════ -->
+<div class="kb-page" id="page-kb">
+  <div class="page-header">
+    <div>
+      <div class="page-title">🧠 Knowledge Base</div>
+      <div class="page-subtitle">AI এর জ্ঞান পরিচালনা করুন — যোগ, সম্পাদনা, মুছুন</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span style="font-size:12px;font-family:var(--mono);color:var(--muted2)">মোট: <span id="kb-total-count" style="color:var(--accent)">0</span> টি এন্ট্রি</span>
+      <button class="btn btn-primary" onclick="exportKB()">⬇️ Export JSON</button>
+    </div>
   </div>
 
-  <!-- Center Chat -->
-  <div class="chat-panel">
-    <!-- Chat Header -->
-    <div class="chat-header" id="chat-header" style="display:none">
-      <div class="chat-header-info">
-        <div class="chat-avatar-lg" id="chat-avatar">👤</div>
-        <div>
-          <div class="chat-name" id="chat-name">—</div>
-          <div class="chat-meta" id="chat-meta">—</div>
-        </div>
-      </div>
-      <div class="chat-actions">
-        <div class="toggle-wrap">
-          <span>AI</span>
-          <label class="toggle">
-            <input type="checkbox" id="ai-toggle" checked onchange="toggleAI(this)">
-            <div class="toggle-slider"></div>
-          </label>
-        </div>
-        <button class="btn btn-ghost" onclick="openTrainPanel()">🧠 ট্রেইন</button>
-        <button class="btn btn-danger" onclick="closeConv()">✕ বন্ধ</button>
-      </div>
-    </div>
+  <div class="kb-layout">
+    <!-- Add Panel -->
+    <div class="kb-add-panel">
+      <div class="divider-label" id="kb-form-mode-label">নতুন যোগ করুন</div>
 
-    <!-- Messages -->
-    <div class="messages" id="messages">
-      <div class="empty-state" id="empty-state">
-        <div class="empty-icon">💬</div>
-        <div class="empty-text">বাম থেকে একটি কথোপকথন বেছে নিন</div>
+      <div class="form-group">
+        <label class="form-label">প্রশ্ন</label>
+        <textarea class="form-input" id="kb-q" placeholder="কাস্টমারের প্রশ্ন লিখুন..." rows="3"></textarea>
       </div>
-    </div>
-
-    <!-- Reply Box -->
-    <div class="reply-box" id="reply-box" style="display:none">
-      <div class="reply-mode-tabs">
-        <button class="tab-btn active" onclick="setMode('agent', this)">✍️ Manual Reply</button>
-        <button class="tab-btn" onclick="setMode('test', this)">🧪 AI Test</button>
+      <div class="form-group">
+        <label class="form-label">উত্তর</label>
+        <textarea class="form-input" id="kb-a" placeholder="AI কী উত্তর দেবে..." rows="5"></textarea>
       </div>
-      <div class="reply-input-row">
-        <textarea class="reply-input" id="reply-input" placeholder="এখানে লিখুন..." rows="1" onkeydown="handleKey(event)"></textarea>
-        <button class="send-btn" onclick="sendReply()">➤</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Right Panel -->
-  <div class="right-panel">
-    <!-- Customer Info -->
-    <div class="right-section" id="customer-info-panel">
-      <div class="section-label">কাস্টমার তথ্য</div>
-      <div id="customer-info">
-        <div style="color:var(--muted);font-size:12px;text-align:center;padding:8px">কথোপকথন বেছে নিন</div>
-      </div>
-    </div>
-
-    <!-- Train AI -->
-    <div class="right-section" id="train-panel" style="display:none">
-      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
-        <span>AI ট্রেইন করুন</span>
-        <span onclick="closeTrainPanel()" style="cursor:pointer;color:var(--muted)">✕</span>
-      </div>
-      <div class="train-form">
-        <input class="form-input" id="train-q" placeholder="প্রশ্ন লিখুন...">
-        <textarea class="form-input" id="train-a" placeholder="উত্তর লিখুন..." rows="3"></textarea>
-        <select class="form-input" id="train-cat">
+      <div class="form-group">
+        <label class="form-label">বিভাগ</label>
+        <select class="form-input" id="kb-cat">
           <option value="general">সাধারণ</option>
           <option value="product_info">পণ্য তথ্য</option>
           <option value="order_tracking">অর্ডার ট্র্যাকিং</option>
@@ -789,116 +1589,566 @@ body::after {
           <option value="saas_support">SaaS সাপোর্ট</option>
           <option value="payment">পেমেন্ট</option>
         </select>
-        <button class="btn btn-primary" onclick="trainAI()" style="width:100%;justify-content:center">🧠 শেখাও</button>
       </div>
+      <div class="form-group">
+        <label class="form-label">ভাষা</label>
+        <select class="form-input" id="kb-lang">
+          <option value="bn">বাংলা</option>
+          <option value="en">English</option>
+          <option value="auto">Auto</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="kb-save-btn" onclick="saveKBEntry()" style="justify-content:center;padding:10px">
+        ✅ সংরক্ষণ করুন
+      </button>
+      <button class="btn btn-ghost" id="kb-cancel-btn" onclick="cancelKBEdit()" style="justify-content:center;display:none">
+        ✕ বাতিল
+      </button>
     </div>
 
-    <!-- Live Feed -->
-    <div class="right-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0">
-      <div class="section-label">লাইভ ফিড</div>
-      <div class="live-feed" id="live-feed"></div>
+    <!-- List Panel -->
+    <div class="kb-list-panel">
+      <div class="kb-toolbar">
+        <input class="search-input" id="kb-search" placeholder="🔍 প্রশ্ন বা উত্তর খুঁজুন..." oninput="filterKB()">
+        <select class="filter-select" id="kb-filter-cat" onchange="filterKB()">
+          <option value="all">সব বিভাগ</option>
+          <option value="general">সাধারণ</option>
+          <option value="product_info">পণ্য তথ্য</option>
+          <option value="order_tracking">অর্ডার ট্র্যাকিং</option>
+          <option value="refund_return">রিফান্ড/রিটার্ন</option>
+          <option value="saas_support">SaaS সাপোর্ট</option>
+          <option value="payment">পেমেন্ট</option>
+        </select>
+        <select class="filter-select" id="kb-filter-lang" onchange="filterKB()" style="min-width:90px">
+          <option value="all">সব ভাষা</option>
+          <option value="bn">বাংলা</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="kb-items" id="kb-items">
+        <div class="empty-state" style="flex:none;padding:40px 0">
+          <div class="empty-icon">🧠</div>
+          <div class="empty-text">লোড হচ্ছে...</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
+<!-- ════════════════════
+     PAGE: WHATSAPP
+════════════════════ -->
+<div class="wa-page" id="page-wa">
+  <div class="page-header">
+    <div>
+      <div class="page-title">📱 WhatsApp কন্ট্রোল</div>
+      <div class="page-subtitle">সংযোগ স্থিতি, মেসেজ পাঠান, লগ দেখুন</div>
+    </div>
+    <button class="btn btn-ghost" onclick="refreshWAStatus()">🔄 রিফ্রেশ</button>
+  </div>
+
+  <div class="wa-content">
+    <!-- Status Cards -->
+    <div class="wa-grid">
+      <div class="wa-card" id="wa-status-card">
+        <div class="wa-card-title">📡 সংযোগ অবস্থা</div>
+        <div class="wa-status-big disconnected" id="wa-status-display">
+          <div class="wa-status-dot"></div>
+          <div class="wa-status-text" id="wa-status-text">চেক করছি...</div>
+        </div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:4px" id="wa-status-sub">—</div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button class="btn btn-success" onclick="connectWA()" style="font-size:11px">🔌 Connect</button>
+          <button class="btn btn-danger" onclick="disconnectWA()" style="font-size:11px">⛔ Disconnect</button>
+        </div>
+      </div>
+
+      <div class="wa-card">
+        <div class="wa-card-title">📤 আজ পাঠানো</div>
+        <div class="wa-stat-num" id="wa-sent-count">0</div>
+        <div class="wa-stat-sub">মেসেজ সফলভাবে পাঠানো হয়েছে</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted2)">
+          ব্যর্থ: <span id="wa-fail-count" style="color:var(--accent2);font-family:var(--mono)">0</span>
+        </div>
+      </div>
+
+      <div class="wa-card">
+        <div class="wa-card-title">📥 আজ পাওয়া</div>
+        <div class="wa-stat-num" id="wa-recv-count">0</div>
+        <div class="wa-stat-sub">মেসেজ গ্রহণ করা হয়েছে</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted2)">
+          Baileys URL: <span id="wa-baileys-url" style="font-family:var(--mono);font-size:10px;color:var(--accent)">localhost:3001</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Send Message Panel -->
+    <div class="wa-send-panel">
+      <div class="wa-send-title">✉️ মেসেজ পাঠান</div>
+
+      <!-- Single Send -->
+      <div>
+        <div class="divider-label" style="margin-bottom:12px">একক মেসেজ</div>
+        <div class="form-group" style="gap:8px">
+          <label class="form-label">ফোন নম্বর</label>
+          <input class="form-input" id="wa-single-phone" placeholder="01XXXXXXXXX">
+        </div>
+        <div class="form-group" style="gap:8px;margin-top:10px">
+          <label class="form-label">মেসেজ</label>
+          <textarea class="form-input" id="wa-single-msg" rows="3" placeholder="মেসেজ লিখুন..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="sendSingleWA()" style="margin-top:10px;justify-content:center;width:100%">
+          📤 পাঠান
+        </button>
+      </div>
+
+      <!-- Bulk Send -->
+      <div>
+        <div class="divider-label" style="margin-bottom:12px">বাল্ক মেসেজ</div>
+        <div class="form-group" style="gap:8px">
+          <label class="form-label">ফোন নম্বরসমূহ (প্রতি লাইনে একটি)</label>
+          <textarea class="form-input" id="wa-bulk-phones" rows="4" placeholder="01XXXXXXXXX&#10;01XXXXXXXXX&#10;01XXXXXXXXX"></textarea>
+        </div>
+        <div class="form-group" style="gap:8px;margin-top:10px">
+          <label class="form-label">মেসেজ</label>
+          <textarea class="form-input" id="wa-bulk-msg" rows="3" placeholder="সবার জন্য একই মেসেজ..."></textarea>
+        </div>
+        <button class="btn btn-purple" onclick="sendBulkWA()" style="margin-top:10px;justify-content:center;width:100%">
+          📢 সবাইকে পাঠান
+        </button>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="wa-log">
+      <div class="wa-log-title">📋 সাম্প্রতিক লগ <span id="wa-log-count" class="badge-count">0</span></div>
+      <div class="wa-log-list" id="wa-log-list">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">কোনো লগ নেই</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════
+     PAGE: SETTINGS
+════════════════════ -->
+<div class="settings-page" id="page-settings">
+  <div class="page-header">
+    <div>
+      <div class="page-title">⚙️ সিস্টেম সেটিংস</div>
+      <div class="page-subtitle">API keys, AI configuration, notification সব এখান থেকে নিয়ন্ত্রণ করুন</div>
+    </div>
+  </div>
+
+  <div class="settings-content">
+    <div class="settings-grid">
+
+      <!-- AI Settings -->
+      <div class="settings-card">
+        <div class="settings-card-title"><span class="title-icon">🤖</span> AI কনফিগারেশন</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">AI এর নাম</span>
+              <span class="settings-label-sub">কাস্টমার এই নামে চিনবে</span>
+            </div>
+            <input class="settings-input" id="s-ai-name" value="Sara AI" placeholder="Sara AI">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">AI Model</span>
+              <span class="settings-label-sub">ব্যবহার করার Claude model</span>
+            </div>
+            <select class="settings-select" id="s-ai-model">
+              <option value="claude-sonnet-4-20250514" selected>Claude Sonnet 4</option>
+              <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+              <option value="claude-opus-4-6">Claude Opus 4.6</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Max Tokens</span>
+              <span class="settings-label-sub">প্রতি রিপ্লাইতে সর্বোচ্চ</span>
+            </div>
+            <input class="settings-input" id="s-max-tokens" value="1000" type="number" min="100" max="4000">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Confidence Threshold</span>
+              <span class="settings-label-sub">এর নিচে হলে human এ পাঠাবে</span>
+            </div>
+            <input class="settings-input" id="s-confidence" value="0.6" type="number" min="0" max="1" step="0.1">
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Tool Calling</span>
+              <span class="settings-label-sub">Live product data আনবে</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-tool-calling" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Auto Language Detect</span>
+              <span class="settings-label-sub">কাস্টমারের ভাষা অটো চিনবে</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-auto-lang" checked><div class="toggle-slider"></div></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Keys -->
+      <div class="settings-card">
+        <div class="settings-card-title"><span class="title-icon">🔑</span> API Keys</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Anthropic API Key</span>
+              <span class="settings-label-sub">Claude API access</span>
+            </div>
+            <input class="settings-input secret" id="s-anthropic-key" value="sk-ant-••••••••" placeholder="sk-ant-...">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">WhatsApp Token</span>
+              <span class="settings-label-sub">Meta Business API</span>
+            </div>
+            <input class="settings-input secret" id="s-wa-token" value="••••••••••••" placeholder="EAA...">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">WhatsApp Phone ID</span>
+              <span class="settings-label-sub">Meta Business phone number ID</span>
+            </div>
+            <input class="settings-input" id="s-wa-phone-id" placeholder="123456789">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Verify Token</span>
+              <span class="settings-label-sub">WhatsApp webhook verification</span>
+            </div>
+            <input class="settings-input secret" id="s-verify-token" value="my_secret_verify_token" placeholder="your_token">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Novatech API URL</span>
+              <span class="settings-label-sub">Product & order backend</span>
+            </div>
+            <input class="settings-input" id="s-novatech-url" placeholder="https://your-backend.com">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">API Secret</span>
+              <span class="settings-label-sub">Internal API authentication</span>
+            </div>
+            <input class="settings-input secret" id="s-api-secret" value="••••••••" placeholder="change-this-secret">
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp / Baileys -->
+      <div class="settings-card">
+        <div class="settings-card-title"><span class="title-icon">📱</span> WhatsApp / Baileys</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Baileys Service URL</span>
+              <span class="settings-label-sub">Node.js WhatsApp gateway</span>
+            </div>
+            <input class="settings-input" id="s-baileys-url" value="http://localhost:3001" placeholder="http://localhost:3001">
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Baileys Gateway</span>
+              <span class="settings-label-sub">WhatsApp Web automation চালু রাখবে</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-baileys-enabled" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Meta Business API</span>
+              <span class="settings-label-sub">Official WhatsApp Business</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-meta-enabled"><div class="toggle-slider"></div></label>
+          </div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Product Image Send</span>
+              <span class="settings-label-sub">WhatsApp এ ছবি পাঠাবে</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-img-send" checked><div class="toggle-slider"></div></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications & System -->
+      <div class="settings-card">
+        <div class="settings-card-title"><span class="title-icon">🔔</span> Notification & System</div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">App Port</span>
+              <span class="settings-label-sub">Backend চলার port</span>
+            </div>
+            <input class="settings-input" id="s-port" value="8000" type="number">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Agent নাম</span>
+              <span class="settings-label-sub">Manual reply এ দেখাবে</span>
+            </div>
+            <input class="settings-input" id="s-agent-name" value="Support Agent">
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Pending Alert</span>
+              <span class="settings-label-sub">Agent প্রয়োজনে notification</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-pending-alert" checked><div class="toggle-slider"></div></label>
+          </div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Debug Mode</span>
+              <span class="settings-label-sub">বিস্তারিত লগ দেখাবে</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-debug"><div class="toggle-slider"></div></label>
+          </div>
+          <div class="settings-toggle-row">
+            <div class="settings-label">
+              <span class="settings-label-main">Auto Restart on Error</span>
+              <span class="settings-label-sub">Error হলে সার্ভার restart</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-auto-restart" checked><div class="toggle-slider"></div></label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- System Prompt -->
+    <div class="settings-card" style="grid-column:span 2">
+      <div class="settings-card-title"><span class="title-icon">📝</span> AI System Prompt কাস্টমাইজ</div>
+      <div class="form-group">
+        <label class="form-label">Custom Instructions (AI এর আচরণ নির্ধারণ)</label>
+        <textarea class="form-input" id="s-system-prompt" rows="6" placeholder="আপনি একজন বিশেষজ্ঞ Customer Care AI...&#10;&#10;এখানে আপনার ব্যবসার নির্দিষ্ট নির্দেশনা যোগ করুন।"></textarea>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted2);font-family:var(--mono)">
+        💡 Variables: {ai_name}, {platform}, {business_name}, {live_data}
+      </div>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <div class="save-indicator" id="save-indicator">পরিবর্তন হয়নি</div>
+    <button class="btn btn-ghost" onclick="resetSettings()">↺ রিসেট</button>
+    <button class="btn btn-primary" onclick="saveSettings()">💾 সেটিংস সেভ করুন</button>
+  </div>
+</div>
+
+<!-- ── Edit KB Modal ── -->
+<div class="modal-overlay" id="kb-edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ এন্ট্রি সম্পাদনা করুন</div>
+      <button class="modal-close" onclick="closeKBModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="modal-kb-id">
+      <div class="form-group">
+        <label class="form-label">প্রশ্ন</label>
+        <textarea class="form-input" id="modal-kb-q" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">উত্তর</label>
+        <textarea class="form-input" id="modal-kb-a" rows="5"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">বিভাগ</label>
+          <select class="form-input" id="modal-kb-cat">
+            <option value="general">সাধারণ</option>
+            <option value="product_info">পণ্য তথ্য</option>
+            <option value="order_tracking">অর্ডার ট্র্যাকিং</option>
+            <option value="refund_return">রিফান্ড/রিটার্ন</option>
+            <option value="saas_support">SaaS সাপোর্ট</option>
+            <option value="payment">পেমেন্ট</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ভাষা</label>
+          <select class="form-input" id="modal-kb-lang">
+            <option value="bn">বাংলা</option>
+            <option value="en">English</option>
+            <option value="auto">Auto</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeKBModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="updateKBEntry()">✅ আপডেট করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Modal ── -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal" style="min-width:340px;max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--accent2)">⚠️ মুছে ফেলবেন?</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted2);line-height:1.7">
+      এই Knowledge Base এন্ট্রিটি স্থায়ীভাবে মুছে যাবে। <br>এই কাজ পূর্বাবস্থায় ফেরানো যাবে না।
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">বাতিল</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">🗑️ মুছুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
 <div class="toast-container" id="toast-container"></div>
 
+</div><!-- /main-content -->
+
 <script>
-// ── Config ──────────────────────────────────────────────────
-const API = 'http://localhost:8000'; // আপনার VPS IP দিন
+// ════════════════════════════════════
+//   CONFIG
+// ════════════════════════════════════
+const API    = 'http://localhost:8000';
 const WS_URL = 'ws://localhost:8000/ws/dashboard';
 
-// ── State ────────────────────────────────────────────────────
-let conversations = [];
-let activeConv = null;
-let replyMode = 'agent';
-let ws = null;
+// ════════════════════════════════════
+//   STATE
+// ════════════════════════════════════
+let conversations   = [];
+let activeConv      = null;
+let replyMode       = 'agent';
+let ws              = null;
 let platform_filter = 'all';
+let kbData          = [];
+let kbEditId        = null;
+let kbDeleteId      = null;
+let waLog           = [];
 
-// ── Demo Data (Backend না থাকলে demo চলবে) ──────────────────
+// ════════════════════════════════════
+//   DEMO DATA
+// ════════════════════════════════════
 const DEMO_CONVS = [
   {
     id:'CONV-001', customer_id:'wa_01711111111',
     platform:'whatsapp', phone:'01711111111',
     ai_enabled:true, status:'active',
     updated_at: new Date().toISOString(),
-    last_message:{role:'user', content:'আমার অর্ডার কোথায়?', timestamp: new Date().toISOString()},
-    history:[
-      {user:'আমার অর্ডার কোথায়?', assistant:'আপনার অর্ডার ORD-001 বর্তমানে শিপমেন্টে আছে। ট্র্যাকিং নম্বর: TRK-12345 🚚', intent:'order_tracking', language:'bn', timestamp: new Date().toISOString()},
-    ]
+    last_message:{role:'user', content:'আমার অর্ডার কোথায়?'},
+    history:[{user:'আমার অর্ডার কোথায়?', assistant:'আপনার অর্ডার ORD-001 শিপমেন্টে আছে। ট্র্যাকিং: TRK-12345 🚚', intent:'order_tracking', language:'bn', timestamp:new Date().toISOString()}]
   },
   {
     id:'CONV-002', customer_id:'web_user_abc',
     platform:'web', phone:null,
     ai_enabled:true, status:'active',
     updated_at: new Date(Date.now()-120000).toISOString(),
-    last_message:{role:'assistant', content:'আমাদের Power Bank ৳১২০০ তে পাওয়া যাচ্ছে', timestamp: new Date(Date.now()-120000).toISOString()},
-    history:[
-      {user:'Power bank এর দাম কত?', assistant:'আমাদের Power Bank ৳১২০০ তে পাওয়া যাচ্ছে! ১০,০০০mAh ক্যাপাসিটি এবং দ্রুত চার্জিং সাপোর্ট সহ। 🔋', intent:'product_info', language:'bn', timestamp: new Date(Date.now()-120000).toISOString()},
-    ]
+    last_message:{role:'assistant', content:'Power Bank ৳১২০০ তে পাওয়া যাচ্ছে'},
+    history:[{user:'Power bank এর দাম কত?', assistant:'আমাদের Power Bank ৳১২০০! ১০,০০০mAh ক্যাপাসিটি 🔋', intent:'product_info', language:'bn', timestamp:new Date(Date.now()-120000).toISOString()}]
   },
   {
     id:'CONV-003', customer_id:'wa_01811111111',
     platform:'whatsapp_web', phone:'01811111111',
     ai_enabled:false, status:'active',
     updated_at: new Date(Date.now()-60000).toISOString(),
-    last_message:{role:'pending', content:'Software login হচ্ছে না help!', timestamp: new Date(Date.now()-60000).toISOString()},
-    history:[
-      {user:'Software login হচ্ছে না help!', assistant:'', intent:'saas_support', language:'bn', timestamp: new Date(Date.now()-60000).toISOString()},
-    ]
+    last_message:{role:'pending', content:'Software login হচ্ছে না!'},
+    history:[{user:'Software login হচ্ছে না!', assistant:'', intent:'saas_support', language:'bn', timestamp:new Date(Date.now()-60000).toISOString()}]
   },
 ];
+const DEMO_STATS = {total_conversations:3, active_conversations:3, ai_replies:2, human_replies:0, pending_messages:1, total_orders:3, by_platform:{web:1,whatsapp:1,whatsapp_web:1}};
+const DEMO_KB = [
+  {id:'mob_001', question:'আপনাদের কি ধরনের পণ্য পাওয়া যায়?', answer:'মোবাইল কভার, স্ক্রিন প্রটেক্টর, চার্জার, ইয়ারফোন, পাওয়ার ব্যাংক সহ সব ধরনের মোবাইল এক্সেসরিজ পাওয়া যায়। 📱', category:'product_info', language:'bn'},
+  {id:'mob_002', question:'What products do you sell?', answer:'We sell all types of mobile accessories including phone cases, screen protectors, chargers, earphones, power banks. 📱', category:'product_info', language:'en'},
+  {id:'mob_003', question:'পণ্যে ওয়ারেন্টি আছে?', answer:'হ্যাঁ! সব পণ্যে ৬ মাসের ওয়ারেন্টি। পণ্য নষ্ট হলে আমাদের সাথে যোগাযোগ করুন। ✅', category:'product_info', language:'bn'},
+  {id:'mob_004', question:'ডেলিভারি কত দিনে পাবো?', answer:'ঢাকার ভেতরে ১-২ দিন, ঢাকার বাইরে ৩-৫ কার্যদিবসের মধ্যে। 🚚', category:'order_tracking', language:'bn'},
+  {id:'mob_005', question:'পণ্য ফেরত দেওয়া যাবে?', answer:'হ্যাঁ! পাওয়ার ৭ দিনের মধ্যে ফেরত দিতে পারবেন। অরিজিনাল প্যাকেজিং সহ ফেরত দিতে হবে। 📦', category:'refund_return', language:'bn'},
+  {id:'saas_001', question:'সফটওয়্যারে লগইন করতে পারছি না', answer:'পাসওয়ার্ড রিসেট করুন, ব্রাউজার ক্যাশ পরিষ্কার করুন, অন্য ব্রাউজারে চেষ্টা করুন। 🔧', category:'saas_support', language:'bn'},
+  {id:'saas_002', question:'সফটওয়্যারের দাম কত?', answer:'Basic: ৳৯৯৯/মাস, Professional: ৳১৯৯৯/মাস, Enterprise: কাস্টম। ৭ দিন ফ্রি ট্রায়াল! 🎉', category:'product_info', language:'bn'},
+  {id:'saas_003', question:'পেমেন্ট কিভাবে করবো?', answer:'বিকাশ, নগদ, রকেট, ক্রেডিট/ডেবিট কার্ড, ব্যাংক ট্রান্সফার গ্রহণ করা হয়। 💳', category:'payment', language:'bn'},
+];
 
-const DEMO_STATS = {
-  total_conversations: 3,
-  active_conversations: 3,
-  ai_replies: 2,
-  human_replies: 0,
-  pending_messages: 1,
-  total_orders: 3,
-  by_platform: {web:1, whatsapp:1, whatsapp_web:1}
-};
+// ════════════════════════════════════
+//   PAGE NAVIGATION
+// ════════════════════════════════════
+function showPage(page, tabEl) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
 
-// ── Init ──────────────────────────────────────────────────────
+  document.querySelectorAll('.chat-page, .kb-page, .wa-page, .settings-page, .analytics-page, .orders-page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+
+  const map = {chat:'page-chat', kb:'page-kb', wa:'page-wa', settings:'page-settings', analytics:'page-analytics', orders:'page-orders'};
+  const el = document.getElementById(map[page]);
+  if (el) {
+    el.style.display = 'flex';
+    el.classList.add('active');
+  }
+
+  if (page === 'kb')       loadKB();
+  if (page === 'wa')       refreshWAStatus();
+  if (page === 'settings') loadSettings();
+}
+
+// ════════════════════════════════════
+//   INIT
+// ════════════════════════════════════
 async function init() {
   startClock();
+  // Show chat page properly
+  document.getElementById('page-chat').style.display = 'flex';
   await loadStats();
   await loadConversations();
   connectWebSocket();
+  startDemoFeed();
+  // Initial notifications
+  setTimeout(()=>{
+    addNotif('📦 নতুন অর্ডার', 'ORD-007 পেন্ডিং আছে, দেখুন।', 'order');
+    addNotif('⚠️ Agent প্রয়োজন', 'সুমাইয়া আক্তার এর মেসেজ আনরিড', 'message');
+  }, 1500);
 }
 
-// ── Clock ─────────────────────────────────────────────────────
 function startClock() {
   const el = document.getElementById('clock');
-  setInterval(() => {
-    el.textContent = new Date().toLocaleTimeString('bn-BD');
-  }, 1000);
+  setInterval(() => { el.textContent = new Date().toLocaleTimeString('bn-BD'); }, 1000);
 }
 
-// ── Stats ──────────────────────────────────────────────────────
+// ════════════════════════════════════
+//   STATS
+// ════════════════════════════════════
 async function loadStats() {
   try {
     const r = await fetch(`${API}/api/stats`);
-    const stats = r.ok ? await r.json() : DEMO_STATS;
-    updateStats(stats);
+    const s = r.ok ? await r.json() : DEMO_STATS;
+    updateStats(s);
   } catch { updateStats(DEMO_STATS); }
 }
-
-function updateStats(stats) {
-  document.getElementById('stat-total').textContent   = stats.total_conversations || 0;
-  document.getElementById('stat-ai').textContent      = stats.ai_replies || 0;
-  document.getElementById('stat-pending').textContent = stats.pending_messages || 0;
-  document.getElementById('stat-human').textContent   = stats.human_replies || 0;
-
-  const p = stats.by_platform || {};
-  document.getElementById('count-all').textContent = stats.total_conversations || 0;
+function updateStats(s) {
+  document.getElementById('stat-total').textContent   = s.total_conversations || 0;
+  document.getElementById('stat-ai').textContent      = s.ai_replies || 0;
+  document.getElementById('stat-pending').textContent = s.pending_messages || 0;
+  document.getElementById('stat-human').textContent   = s.human_replies || 0;
+  const p = s.by_platform || {};
+  document.getElementById('count-all').textContent = s.total_conversations || 0;
   document.getElementById('count-web').textContent = p.web || 0;
-  document.getElementById('count-wa').textContent  = (p.whatsapp||0) + (p.whatsapp_web||0);
+  document.getElementById('count-wa').textContent  = (p.whatsapp||0)+(p.whatsapp_web||0);
   document.getElementById('count-tg').textContent  = p.telegram || 0;
 }
 
-// ── Conversations ─────────────────────────────────────────────
+// ════════════════════════════════════
+//   CONVERSATIONS
+// ════════════════════════════════════
 async function loadConversations() {
   try {
     const r = await fetch(`${API}/api/conversations`);
@@ -906,119 +2156,76 @@ async function loadConversations() {
   } catch { conversations = DEMO_CONVS; }
   renderConversations();
 }
-
 function renderConversations() {
   const list = document.getElementById('conv-list');
   let filtered = conversations;
   if (platform_filter !== 'all') {
-    filtered = conversations.filter(c => c.platform === platform_filter || 
-      (platform_filter === 'whatsapp' && c.platform === 'whatsapp_web'));
+    filtered = conversations.filter(c => c.platform === platform_filter ||
+      (platform_filter==='whatsapp' && c.platform==='whatsapp_web'));
   }
-
   list.innerHTML = filtered.map(c => {
     const isPending = c.last_message?.role === 'pending';
     const isActive  = activeConv?.id === c.id;
-    const avatar    = platformEmoji(c.platform);
-    const name      = c.phone || c.customer_id.substring(0,12);
-    const preview   = c.last_message?.content || '...';
-    const time      = timeAgo(c.updated_at);
-    const aiClass   = c.ai_enabled ? 'ai-on' : 'ai-off';
-    const aiLabel   = c.ai_enabled ? 'AI ON' : 'AI OFF';
-
     return `<div class="conv-item ${isActive?'active':''} ${isPending?'has-pending':''}" onclick="openConversation('${c.id}')">
       <div class="conv-header">
-        <div class="conv-avatar">${avatar}</div>
-        <div class="conv-name">${name}</div>
-        <span class="ai-badge ${aiClass}">${aiLabel}</span>
-        <span class="conv-time">${time}</span>
+        <div class="conv-avatar">${platformEmoji(c.platform)}</div>
+        <div class="conv-name">${c.phone||c.customer_id.substring(0,12)}</div>
+        <span class="ai-badge ${c.ai_enabled?'ai-on':'ai-off'}">${c.ai_enabled?'AI ON':'AI OFF'}</span>
+        <span class="conv-time">${timeAgo(c.updated_at)}</span>
       </div>
-      <div class="conv-preview">${preview}</div>
+      <div class="conv-preview">${c.last_message?.content||'...'}</div>
     </div>`;
   }).join('');
 }
-
 function platformEmoji(p) {
-  if (p === 'whatsapp' || p === 'whatsapp_web') return '📱';
-  if (p === 'telegram') return '✈️';
+  if (p==='whatsapp'||p==='whatsapp_web') return '📱';
+  if (p==='telegram') return '✈️';
   return '💻';
 }
-
 function timeAgo(iso) {
-  const diff = (Date.now() - new Date(iso)) / 1000;
-  if (diff < 60) return 'এখন';
-  if (diff < 3600) return `${Math.floor(diff/60)}মি`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}ঘ`;
-  return `${Math.floor(diff/86400)}দ`;
+  const d = (Date.now()-new Date(iso))/1000;
+  if (d<60) return 'এখন';
+  if (d<3600) return `${Math.floor(d/60)}মি`;
+  if (d<86400) return `${Math.floor(d/3600)}ঘ`;
+  return `${Math.floor(d/86400)}দ`;
 }
-
-// ── Open Conversation ─────────────────────────────────────────
 async function openConversation(id) {
   try {
     const r = await fetch(`${API}/api/conversations/${id}`);
     activeConv = r.ok ? await r.json() : conversations.find(c=>c.id===id);
-  } catch {
-    activeConv = conversations.find(c=>c.id===id);
-  }
+  } catch { activeConv = conversations.find(c=>c.id===id); }
   if (!activeConv) return;
-
-  // Update local list
   const idx = conversations.findIndex(c=>c.id===id);
-  if (idx > -1) conversations[idx] = {...conversations[idx], ...activeConv};
-
-  renderConversations();
-  renderChat();
-  renderCustomerInfo();
-  document.getElementById('chat-header').style.display = 'flex';
-  document.getElementById('reply-box').style.display = 'block';
-  document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('ai-toggle').checked = activeConv.ai_enabled !== false;
+  if (idx>-1) conversations[idx] = {...conversations[idx],...activeConv};
+  renderConversations(); renderChat(); renderCustomerInfo();
+  document.getElementById('chat-header').style.display='flex';
+  document.getElementById('reply-box').style.display='block';
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('ai-toggle').checked = activeConv.ai_enabled!==false;
 }
-
-// ── Render Chat ───────────────────────────────────────────────
 function renderChat() {
   if (!activeConv) return;
-  const name = activeConv.phone || activeConv.customer_id;
-  const plat = activeConv.platform === 'whatsapp' || activeConv.platform === 'whatsapp_web'
-    ? 'WhatsApp' : activeConv.platform === 'telegram' ? 'Telegram' : 'Web';
-
+  const plat = activeConv.platform==='whatsapp'||activeConv.platform==='whatsapp_web'?'WhatsApp':activeConv.platform==='telegram'?'Telegram':'Web';
   document.getElementById('chat-avatar').textContent = platformEmoji(activeConv.platform);
-  document.getElementById('chat-name').textContent   = name;
+  document.getElementById('chat-name').textContent   = activeConv.phone||activeConv.customer_id;
   document.getElementById('chat-meta').textContent   = `${plat} · ${activeConv.id}`;
-
   const msgs = document.getElementById('messages');
-  const history = activeConv.history || [];
-
   let html = '';
-  for (const item of history) {
-    if (item.user) {
-      html += msgHTML('user', '👤', item.user, item.timestamp, null, null);
-    }
-    if (item.assistant) {
-      html += msgHTML('ai', '🤖', item.assistant, item.timestamp, item.intent, item.language);
-    }
+  for (const item of (activeConv.history||[])) {
+    if (item.user)      html += msgHTML('user','👤',item.user,item.timestamp,null,null);
+    if (item.assistant) html += msgHTML('ai','🤖',item.assistant,item.timestamp,item.intent,item.language);
   }
-
-  // Pending message
-  if (activeConv.last_message?.role === 'pending') {
-    html += `<div style="text-align:center;padding:8px">
-      <span style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--accent2);padding:4px 12px;border-radius:20px;font-size:11px;font-family:var(--mono)">
-        ⚠️ AI বন্ধ — Agent রিপ্লাই প্রয়োজন
-      </span>
-    </div>`;
+  if (activeConv.last_message?.role==='pending') {
+    html += `<div style="text-align:center;padding:8px"><span style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--accent2);padding:4px 12px;border-radius:20px;font-size:11px;font-family:var(--mono)">⚠️ AI বন্ধ — Agent রিপ্লাই প্রয়োজন</span></div>`;
   }
-
-  msgs.innerHTML = html || '<div class="empty-state" style="flex:1"><div class="empty-icon">💬</div><div class="empty-text">কোনো মেসেজ নেই</div></div>';
+  msgs.innerHTML = html||'<div class="empty-state" style="flex:1"><div class="empty-icon">💬</div><div class="empty-text">কোনো মেসেজ নেই</div></div>';
   msgs.scrollTop = msgs.scrollHeight;
 }
-
 function msgHTML(type, avatar, text, time, intent, lang) {
-  const intentTag = intent && intent !== 'general' && intent !== 'error'
-    ? `<span class="intent-tag">${intent}</span>` : '';
-  const langTag = lang ? `<span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${lang}</span>` : '';
-  const timeStr = time ? new Date(time).toLocaleTimeString('bn-BD', {hour:'2-digit',minute:'2-digit'}) : '';
-  const agentClass = type === 'agent' ? 'agent' : type;
-
-  return `<div class="msg-row ${type === 'user' ? 'user' : agentClass}">
+  const intentTag = intent&&intent!=='general'&&intent!=='error' ? `<span class="intent-tag">${intent}</span>` : '';
+  const langTag   = lang ? `<span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${lang}</span>` : '';
+  const timeStr   = time ? new Date(time).toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'}) : '';
+  return `<div class="msg-row ${type==='user'?'user':type}">
     <div class="msg-avatar">${avatar}</div>
     <div>
       <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
@@ -1026,66 +2233,36 @@ function msgHTML(type, avatar, text, time, intent, lang) {
     </div>
   </div>`;
 }
-
-// ── Customer Info ─────────────────────────────────────────────
 function renderCustomerInfo() {
   if (!activeConv) return;
   document.getElementById('customer-info').innerHTML = `
     <div class="info-row"><span class="info-key">ID</span><span class="info-val">${activeConv.customer_id}</span></div>
-    <div class="info-row"><span class="info-key">ফোন</span><span class="info-val">${activeConv.phone || 'N/A'}</span></div>
-    <div class="info-row"><span class="info-key">প্ল্যাটফর্ম</span><span class="info-val">${activeConv.platform}</span></div>
+    <div class="info-row"><span class="info-key">ফোন</span><span class="info-val">${activeConv.phone||'N/A'}</span></div>
+    <div class="info-row"><span class="info-key">Platform</span><span class="info-val">${activeConv.platform}</span></div>
     <div class="info-row"><span class="info-key">Conv ID</span><span class="info-val">${activeConv.id}</span></div>
     <div class="info-row"><span class="info-key">AI</span><span class="info-val" style="color:${activeConv.ai_enabled?'var(--accent3)':'var(--accent2)'}">${activeConv.ai_enabled?'চালু ✅':'বন্ধ ❌'}</span></div>
-    <div class="info-row"><span class="info-key">মেসেজ</span><span class="info-val">${(activeConv.history||[]).length * 2}</span></div>
-  `;
+    <div class="info-row"><span class="info-key">মেসেজ</span><span class="info-val">${(activeConv.history||[]).length*2}</span></div>`;
 }
 
-// ── Send Reply ────────────────────────────────────────────────
+// ════════════════════════════════════
+//   SEND REPLY
+// ════════════════════════════════════
 async function sendReply() {
   const input = document.getElementById('reply-input');
-  const msg = input.value.trim();
-  if (!msg || !activeConv) return;
+  const msg   = input.value.trim();
+  if (!msg||!activeConv) return;
   input.value = '';
-
-  if (replyMode === 'agent') {
-    // Manual reply
+  if (replyMode==='agent') {
     try {
-      const r = await fetch(`${API}/api/manual-reply`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          conversation_id: activeConv.id,
-          message: msg,
-          agent_name: 'Support Agent'
-        })
-      });
+      await fetch(`${API}/api/manual-reply`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conversation_id:activeConv.id,message:msg,agent_name:document.getElementById('s-agent-name')?.value||'Support Agent'})});
     } catch {}
-
-    // UI তে যোগ করো
-    if (!activeConv.history) activeConv.history = [];
-    activeConv.history.push({
-      user:'', assistant:'', agent: msg,
-      timestamp: new Date().toISOString()
-    });
-
-    // Agent message দেখাও
     const msgs = document.getElementById('messages');
-    msgs.insertAdjacentHTML('beforeend', msgHTML('agent', '🧑‍💼', msg, new Date().toISOString(), null, null));
+    msgs.insertAdjacentHTML('beforeend', msgHTML('agent','🧑‍💼',msg,new Date().toISOString(),null,null));
     msgs.scrollTop = msgs.scrollHeight;
-    showToast('রিপ্লাই পাঠানো হয়েছে ✅', 'success');
-
+    showToast('রিপ্লাই পাঠানো হয়েছে ✅','success');
   } else {
-    // AI Test mode
     try {
-      const r = await fetch(`${API}/api/chat`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          customer_id: activeConv.customer_id,
-          message: msg,
-          platform: activeConv.platform
-        })
-      });
+      const r = await fetch(`${API}/api/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_id:activeConv.customer_id,message:msg,platform:activeConv.platform})});
       if (r.ok) {
         const data = await r.json();
         const msgs = document.getElementById('messages');
@@ -1093,207 +2270,1372 @@ async function sendReply() {
         msgs.insertAdjacentHTML('beforeend', msgHTML('ai','🤖',data.reply,new Date().toISOString(),data.intent,data.language));
         msgs.scrollTop = msgs.scrollHeight;
       }
-    } catch {
-      showToast('Backend সংযোগ নেই', 'error');
-    }
+    } catch { showToast('Backend সংযোগ নেই','error'); }
   }
 }
-
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendReply();
-  }
-}
-
-function setMode(mode, el) {
-  replyMode = mode;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+function handleKey(e) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendReply();} }
+function setMode(mode,el) {
+  replyMode=mode;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('reply-input').placeholder =
-    mode === 'agent' ? 'এজেন্ট হিসেবে রিপ্লাই দিন...' : 'AI টেস্ট করুন...';
+  document.getElementById('reply-input').placeholder = mode==='agent'?'এজেন্ট হিসেবে রিপ্লাই দিন...':'AI টেস্ট করুন...';
 }
-
-// ── AI Toggle ─────────────────────────────────────────────────
 async function toggleAI(el) {
   if (!activeConv) return;
-  try {
-    await fetch(`${API}/api/toggle-ai`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({conversation_id: activeConv.id, enabled: el.checked})
-    });
-  } catch {}
+  try { await fetch(`${API}/api/toggle-ai`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conversation_id:activeConv.id,enabled:el.checked})}); } catch {}
   activeConv.ai_enabled = el.checked;
   const idx = conversations.findIndex(c=>c.id===activeConv.id);
   if (idx>-1) conversations[idx].ai_enabled = el.checked;
-  renderConversations();
-  renderCustomerInfo();
+  renderConversations(); renderCustomerInfo();
   showToast(`AI ${el.checked?'চালু':'বন্ধ'} করা হয়েছে`, el.checked?'success':'error');
 }
-
-// ── Train AI ──────────────────────────────────────────────────
 async function trainAI() {
-  const q = document.getElementById('train-q').value.trim();
-  const a = document.getElementById('train-a').value.trim();
-  const cat = document.getElementById('train-cat').value;
-  if (!q || !a) { showToast('প্রশ্ন ও উত্তর লিখুন', 'error'); return; }
+  const q=document.getElementById('train-q').value.trim();
+  const a=document.getElementById('train-a').value.trim();
+  const cat=document.getElementById('train-cat').value;
+  if (!q||!a){showToast('প্রশ্ন ও উত্তর লিখুন','error');return;}
   try {
-    const r = await fetch(`${API}/api/train`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({question:q, answer:a, category:cat})
-    });
-    showToast('AI শিখে গেছে! 🧠✅', 'success');
-    document.getElementById('train-q').value = '';
-    document.getElementById('train-a').value = '';
-  } catch {
-    showToast('Backend সংযোগ নেই', 'error');
-  }
+    await fetch(`${API}/api/train`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,answer:a,category:cat})});
+    showToast('AI শিখে গেছে! 🧠✅','success');
+    document.getElementById('train-q').value='';
+    document.getElementById('train-a').value='';
+    kbData.unshift({id:`custom_${Date.now()}`,question:q,answer:a,category:cat,language:'bn'});
+  } catch { showToast('Backend সংযোগ নেই','error'); }
 }
-
-// ── Filter ────────────────────────────────────────────────────
-function filterPlatform(p, el) {
-  platform_filter = p;
+function filterPlatform(p,el) {
+  platform_filter=p;
   document.querySelectorAll('.platform-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
   renderConversations();
 }
-
-// ── Panel toggle ──────────────────────────────────────────────
 function openTrainPanel() {
-  document.getElementById('train-panel').style.display = 'block';
-  document.getElementById('customer-info-panel').style.display = 'none';
+  document.getElementById('train-panel').style.display='block';
+  document.getElementById('customer-info-panel').style.display='none';
 }
 function closeTrainPanel() {
-  document.getElementById('train-panel').style.display = 'none';
-  document.getElementById('customer-info-panel').style.display = 'block';
+  document.getElementById('train-panel').style.display='none';
+  document.getElementById('customer-info-panel').style.display='block';
 }
 function closeConv() {
-  activeConv = null;
-  document.getElementById('chat-header').style.display = 'none';
-  document.getElementById('reply-box').style.display = 'none';
-  document.getElementById('messages').innerHTML = `<div class="empty-state" id="empty-state"><div class="empty-icon">💬</div><div class="empty-text">বাম থেকে একটি কথোপকথন বেছে নিন</div></div>`;
+  activeConv=null;
+  document.getElementById('chat-header').style.display='none';
+  document.getElementById('reply-box').style.display='none';
+  document.getElementById('messages').innerHTML='<div class="empty-state" id="empty-state"><div class="empty-icon">💬</div><div class="empty-text">বাম থেকে একটি কথোপকথন বেছে নিন</div></div>';
   renderConversations();
 }
 
-// ── WebSocket ─────────────────────────────────────────────────
+// ════════════════════════════════════
+//   KNOWLEDGE BASE
+// ════════════════════════════════════
+async function loadKB() {
+  try {
+    const r = await fetch(`${API}/api/knowledge`);
+    kbData = r.ok ? (await r.json()) : DEMO_KB;
+  } catch { kbData = DEMO_KB; }
+  renderKB(kbData);
+}
+function renderKB(data) {
+  document.getElementById('kb-total-count').textContent = data.length;
+  const container = document.getElementById('kb-items');
+  if (!data.length) {
+    container.innerHTML='<div class="empty-state" style="flex:none;padding:40px 0"><div class="empty-icon">🧠</div><div class="empty-text">কোনো এন্ট্রি নেই</div></div>';
+    return;
+  }
+  container.innerHTML = data.map(item => `
+    <div class="kb-item" id="kb-item-${item.id}">
+      <div class="kb-item-header">
+        <div class="kb-item-q">❓ ${item.question}</div>
+        <div class="kb-item-meta">
+          <span class="cat-badge cat-${item.category||'general'}">${catLabel(item.category)}</span>
+          <span class="lang-badge">${item.language||'auto'}</span>
+        </div>
+      </div>
+      <div class="kb-item-a">💬 ${item.answer}</div>
+      <div class="kb-item-actions">
+        <button class="kb-btn kb-btn-edit" onclick="editKBEntry('${item.id}')">✏️ সম্পাদনা</button>
+        <button class="kb-btn kb-btn-del"  onclick="deleteKBConfirm('${item.id}')">🗑️ মুছুন</button>
+      </div>
+    </div>`).join('');
+}
+function catLabel(cat) {
+  const map={general:'সাধারণ',product_info:'পণ্য',order_tracking:'অর্ডার',refund_return:'রিফান্ড',saas_support:'SaaS',payment:'পেমেন্ট'};
+  return map[cat]||cat||'সাধারণ';
+}
+function filterKB() {
+  const q    = document.getElementById('kb-search').value.toLowerCase();
+  const cat  = document.getElementById('kb-filter-cat').value;
+  const lang = document.getElementById('kb-filter-lang').value;
+  let filtered = kbData.filter(item => {
+    const matchQ    = !q || item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q);
+    const matchCat  = cat==='all' || item.category===cat;
+    const matchLang = lang==='all' || item.language===lang;
+    return matchQ && matchCat && matchLang;
+  });
+  renderKB(filtered);
+}
+async function saveKBEntry() {
+  const q   = document.getElementById('kb-q').value.trim();
+  const a   = document.getElementById('kb-a').value.trim();
+  const cat = document.getElementById('kb-cat').value;
+  const lng = document.getElementById('kb-lang').value;
+  if (!q||!a){showToast('প্রশ্ন ও উত্তর লিখুন','error');return;}
+  try {
+    await fetch(`${API}/api/train`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,answer:a,category:cat,language:lng})});
+  } catch {}
+  const newEntry = {id:`kb_${Date.now()}`,question:q,answer:a,category:cat,language:lng};
+  kbData.unshift(newEntry);
+  renderKB(kbData);
+  document.getElementById('kb-q').value='';
+  document.getElementById('kb-a').value='';
+  showToast('Knowledge Base এ যোগ হয়েছে ✅','success');
+}
+function cancelKBEdit() {
+  kbEditId=null;
+  document.getElementById('kb-q').value='';
+  document.getElementById('kb-a').value='';
+  document.getElementById('kb-form-mode-label').textContent='নতুন যোগ করুন';
+  document.getElementById('kb-save-btn').textContent='✅ সংরক্ষণ করুন';
+  document.getElementById('kb-cancel-btn').style.display='none';
+}
+function editKBEntry(id) {
+  const item = kbData.find(k=>k.id===id);
+  if (!item) return;
+  document.getElementById('modal-kb-id').value  = id;
+  document.getElementById('modal-kb-q').value   = item.question;
+  document.getElementById('modal-kb-a').value   = item.answer;
+  document.getElementById('modal-kb-cat').value = item.category||'general';
+  document.getElementById('modal-kb-lang').value= item.language||'bn';
+  document.getElementById('kb-edit-modal').classList.add('open');
+}
+function updateKBEntry() {
+  const id  = document.getElementById('modal-kb-id').value;
+  const q   = document.getElementById('modal-kb-q').value.trim();
+  const a   = document.getElementById('modal-kb-a').value.trim();
+  const cat = document.getElementById('modal-kb-cat').value;
+  const lng = document.getElementById('modal-kb-lang').value;
+  if (!q||!a){showToast('প্রশ্ন ও উত্তর লিখুন','error');return;}
+  const idx = kbData.findIndex(k=>k.id===id);
+  if (idx>-1) kbData[idx] = {...kbData[idx],question:q,answer:a,category:cat,language:lng};
+  renderKB(kbData);
+  closeKBModal();
+  showToast('আপডেট হয়েছে ✅','success');
+}
+function deleteKBConfirm(id) {
+  kbDeleteId = id;
+  document.getElementById('delete-modal').classList.add('open');
+}
+async function confirmDelete() {
+  if (!kbDeleteId) return;
+  try { await fetch(`${API}/api/knowledge/${kbDeleteId}`,{method:'DELETE'}); } catch {}
+  kbData = kbData.filter(k=>k.id!==kbDeleteId);
+  renderKB(kbData);
+  closeDeleteModal();
+  showToast('মুছে ফেলা হয়েছে 🗑️','warn');
+  kbDeleteId=null;
+}
+function exportKB() {
+  const blob = new Blob([JSON.stringify(kbData,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='knowledge_base.json'; a.click();
+  showToast('Export সম্পন্ন ✅','success');
+}
+function closeKBModal()     { document.getElementById('kb-edit-modal').classList.remove('open'); }
+function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('open'); }
+
+// ════════════════════════════════════
+//   WHATSAPP
+// ════════════════════════════════════
+async function refreshWAStatus() {
+  const display = document.getElementById('wa-status-display');
+  const text    = document.getElementById('wa-status-text');
+  const sub     = document.getElementById('wa-status-sub');
+  text.textContent = 'চেক করছি...';
+  try {
+    const r = await fetch(`${API}/whatsapp/status`);
+    const data = r.ok ? await r.json() : {connected:false,error:'Backend reach করা যায়নি'};
+    if (data.connected) {
+      display.className = 'wa-status-big connected';
+      text.textContent  = 'সংযুক্ত';
+      sub.textContent   = data.phone || 'Baileys gateway চালু আছে';
+    } else {
+      display.className = 'wa-status-big disconnected';
+      text.textContent  = 'বিচ্ছিন্ন';
+      sub.textContent   = data.error || 'Baileys gateway চালু নেই';
+    }
+  } catch {
+    display.className = 'wa-status-big disconnected';
+    text.textContent  = 'বিচ্ছিন্ন';
+    sub.textContent   = 'Backend সংযোগ নেই';
+  }
+  // Update baileys URL from settings
+  const bUrl = document.getElementById('s-baileys-url')?.value || 'localhost:3001';
+  document.getElementById('wa-baileys-url').textContent = bUrl.replace('http://','');
+}
+async function connectWA() {
+  showToast('WhatsApp connect করার চেষ্টা হচ্ছে...','');
+  try {
+    const r = await fetch(`${API}/whatsapp/connect`,{method:'POST'});
+    if (r.ok) { showToast('Connect request পাঠানো হয়েছে ✅','success'); refreshWAStatus(); }
+    else showToast('Connect করা যায়নি','error');
+  } catch { showToast('Backend reach করা যায়নি','error'); }
+}
+async function disconnectWA() {
+  try {
+    await fetch(`${API}/whatsapp/disconnect`,{method:'POST'});
+    showToast('WhatsApp disconnect হয়েছে','warn');
+    setTimeout(refreshWAStatus, 1000);
+  } catch { showToast('Backend reach করা যায়নি','error'); }
+}
+async function sendSingleWA() {
+  const phone = document.getElementById('wa-single-phone').value.trim();
+  const msg   = document.getElementById('wa-single-msg').value.trim();
+  const secret= document.getElementById('s-api-secret')?.value || 'change-this-secret';
+  if (!phone||!msg){showToast('ফোন নম্বর ও মেসেজ লিখুন','error');return;}
+  try {
+    const r = await fetch(`${API}/send-whatsapp`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,message:msg,api_secret:secret})});
+    if (r.ok) {
+      showToast(`${phone} এ মেসেজ পাঠানো হয়েছে ✅`,'success');
+      addWALog(phone,msg,'sent');
+      document.getElementById('wa-single-msg').value='';
+      document.getElementById('wa-sent-count').textContent = parseInt(document.getElementById('wa-sent-count').textContent)+1;
+    } else {
+      showToast('মেসেজ পাঠানো যায়নি','error');
+      addWALog(phone,msg,'fail');
+    }
+  } catch {
+    showToast('Backend সংযোগ নেই','error');
+    addWALog(phone,msg,'fail');
+  }
+}
+async function sendBulkWA() {
+  const phones = document.getElementById('wa-bulk-phones').value.trim().split('\n').map(p=>p.trim()).filter(Boolean);
+  const msg    = document.getElementById('wa-bulk-msg').value.trim();
+  const secret = document.getElementById('s-api-secret')?.value || 'change-this-secret';
+  if (!phones.length||!msg){showToast('ফোন নম্বর ও মেসেজ লিখুন','error');return;}
+  try {
+    const r = await fetch(`${API}/send-whatsapp/bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phones,message:msg,api_secret:secret})});
+    if (r.ok) {
+      const data = await r.json();
+      showToast(`${phones.length} জনকে মেসেজ পাঠানো হয়েছে 📢`,'success');
+      phones.forEach(p=>addWALog(p,msg,'sent'));
+    } else showToast('Bulk মেসেজ পাঠানো যায়নি','error');
+  } catch { showToast('Backend সংযোগ নেই','error'); }
+}
+function addWALog(phone, msg, status) {
+  const logList = document.getElementById('wa-log-list');
+  const entry = {phone,msg,status,time:new Date()};
+  waLog.unshift(entry);
+  if (waLog.length===1) logList.innerHTML='';
+  const el = document.createElement('div');
+  el.className = 'wa-log-item';
+  el.innerHTML = `
+    <span class="wa-log-icon">${status==='sent'?'✅':'❌'}</span>
+    <span class="wa-log-phone">${phone}</span>
+    <span class="wa-log-msg">${msg}</span>
+    <span class="wa-log-time">${entry.time.toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'})}</span>
+    <span class="wa-log-status ${status==='sent'?'log-sent':'log-fail'}">${status==='sent'?'SENT':'FAIL'}</span>`;
+  logList.insertBefore(el,logList.firstChild);
+  while(logList.children.length>50) logList.removeChild(logList.lastChild);
+  document.getElementById('wa-log-count').textContent = Math.min(waLog.length,50);
+}
+
+// ════════════════════════════════════
+//   SETTINGS
+// ════════════════════════════════════
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem('sara-settings')||'{}');
+  if (saved['s-ai-name'])       document.getElementById('s-ai-name').value       = saved['s-ai-name'];
+  if (saved['s-ai-model'])      document.getElementById('s-ai-model').value      = saved['s-ai-model'];
+  if (saved['s-max-tokens'])    document.getElementById('s-max-tokens').value    = saved['s-max-tokens'];
+  if (saved['s-confidence'])    document.getElementById('s-confidence'].value    = saved['s-confidence'];
+  if (saved['s-baileys-url'])   document.getElementById('s-baileys-url'].value   = saved['s-baileys-url'];
+  if (saved['s-agent-name'])    document.getElementById('s-agent-name'].value    = saved['s-agent-name'];
+  if (saved['s-system-prompt']) document.getElementById('s-system-prompt').value = saved['s-system-prompt'];
+  if (saved['s-port'])          document.getElementById('s-port').value          = saved['s-port'];
+  const toggles = ['s-tool-calling','s-auto-lang','s-baileys-enabled','s-meta-enabled','s-img-send','s-pending-alert','s-debug','s-auto-restart'];
+  toggles.forEach(id => {
+    if (saved[id]!==undefined) document.getElementById(id).checked = saved[id];
+  });
+  // Mark inputs as changed
+  document.querySelectorAll('.settings-input,.settings-select').forEach(el=>{
+    el.addEventListener('input',()=>{ document.getElementById('save-indicator').textContent='সংরক্ষণ না করা পরিবর্তন আছে ⚠️'; document.getElementById('save-indicator').className='save-indicator'; });
+  });
+}
+function saveSettings() {
+  const ids=['s-ai-name','s-ai-model','s-max-tokens','s-confidence','s-baileys-url','s-agent-name','s-system-prompt','s-port','s-anthropic-key','s-wa-token','s-wa-phone-id','s-verify-token','s-novatech-url','s-api-secret'];
+  const toggles=['s-tool-calling','s-auto-lang','s-baileys-enabled','s-meta-enabled','s-img-send','s-pending-alert','s-debug','s-auto-restart'];
+  const saved={};
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)saved[id]=el.value;});
+  toggles.forEach(id=>{const el=document.getElementById(id);if(el)saved[id]=el.checked;});
+  localStorage.setItem('sara-settings',JSON.stringify(saved));
+  document.getElementById('save-indicator').textContent='সংরক্ষণ হয়েছে ✅';
+  document.getElementById('save-indicator').className='save-indicator saved';
+  showToast('সেটিংস সেভ হয়েছে ✅','success');
+  // Also try to push to backend
+  fetch(`${API}/api/settings`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(saved)}).catch(()=>{});
+}
+function resetSettings() {
+  localStorage.removeItem('sara-settings');
+  showToast('সেটিংস রিসেট হয়েছে','warn');
+  document.getElementById('save-indicator').textContent='রিসেট করা হয়েছে';
+  setTimeout(()=>document.getElementById('save-indicator').textContent='পরিবর্তন হয়নি',2000);
+}
+
+// ════════════════════════════════════
+//   WEBSOCKET
+// ════════════════════════════════════
 function connectWebSocket() {
   try {
     ws = new WebSocket(WS_URL);
-    ws.onopen = () => showToast('Live সংযোগ হয়েছে ✅', 'success');
+    ws.onopen = () => showToast('Live সংযোগ হয়েছে ✅','success');
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
       handleLiveEvent(data);
     };
-    ws.onclose = () => {
-      setTimeout(connectWebSocket, 5000);
-    };
+    ws.onclose = () => setTimeout(connectWebSocket, 5000);
   } catch {}
 }
-
 function handleLiveEvent(data) {
-  if (data.type === 'init') {
-    updateStats(data.stats);
-    return;
-  }
-
-  // Live feed এ যোগ করো
+  if (data.type==='init'){updateStats(data.stats);return;}
   addFeedItem(data);
-
-  // Stats আপডেট
   loadStats();
-
-  // Conversation list আপডেট
   if (data.conversation_id) {
     const idx = conversations.findIndex(c=>c.id===data.conversation_id);
-    if (idx > -1) {
-      conversations[idx].last_message = {
-        role: data.type === 'ai_reply' ? 'assistant' : 'pending',
-        content: data.ai_reply || data.user_message || data.message || '',
-        timestamp: data.timestamp
-      };
+    if (idx>-1) {
+      conversations[idx].last_message = {role:data.type==='ai_reply'?'assistant':'pending', content:data.ai_reply||data.user_message||data.message||'', timestamp:data.timestamp};
       conversations[idx].updated_at = data.timestamp;
     } else {
-      // নতুন conversation যোগ করো
-      conversations.unshift({
-        id: data.conversation_id,
-        customer_id: data.customer_id,
-        platform: data.platform || 'web',
-        ai_enabled: data.ai_enabled !== false,
-        status: 'active',
-        updated_at: data.timestamp,
-        last_message: {role:'user', content: data.user_message || data.message || ''},
-        history: []
-      });
+      conversations.unshift({id:data.conversation_id,customer_id:data.customer_id,platform:data.platform||'web',ai_enabled:data.ai_enabled!==false,status:'active',updated_at:data.timestamp,last_message:{role:'user',content:data.user_message||data.message||''},history:[]});
     }
     renderConversations();
-
-    // Active conversation হলে chat আপডেট করো
-    if (activeConv?.id === data.conversation_id && data.type === 'ai_reply') {
+    if (activeConv?.id===data.conversation_id && data.type==='ai_reply') {
       const msgs = document.getElementById('messages');
       msgs.insertAdjacentHTML('beforeend', msgHTML('user','👤',data.user_message,data.timestamp,null,null));
       msgs.insertAdjacentHTML('beforeend', msgHTML('ai','🤖',data.ai_reply,data.timestamp,data.intent,data.language));
       msgs.scrollTop = msgs.scrollHeight;
     }
   }
-
-  // Pending notification
-  if (data.ai_enabled === false || data.type === 'new_message') {
-    showToast(`⚠️ নতুন মেসেজ — Agent প্রয়োজন!`, 'error');
-  }
+  if (data.ai_enabled===false||data.type==='new_message') showToast('⚠️ নতুন মেসেজ — Agent প্রয়োজন!','error');
 }
-
 function addFeedItem(data) {
   const feed = document.getElementById('live-feed');
-  const plat = data.platform || 'web';
-  const platClass = plat.includes('whatsapp') ? 'fp-wa' : plat === 'telegram' ? 'fp-tg' : 'fp-web';
-  const platLabel = plat.includes('whatsapp') ? 'WA' : plat === 'telegram' ? 'TG' : 'WEB';
-  const msg = data.user_message || data.message || data.ai_reply || '...';
-  const time = new Date(data.timestamp || Date.now()).toLocaleTimeString('bn-BD', {hour:'2-digit',minute:'2-digit'});
-
+  const plat = data.platform||'web';
+  const platClass = plat.includes('whatsapp')?'fp-wa':plat==='telegram'?'fp-tg':'fp-web';
+  const platLabel = plat.includes('whatsapp')?'WA':plat==='telegram'?'TG':'WEB';
+  const msg  = data.user_message||data.message||data.ai_reply||'...';
+  const time = new Date(data.timestamp||Date.now()).toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'});
   const item = document.createElement('div');
-  item.className = 'feed-item';
-  item.onclick = () => data.conversation_id && openConversation(data.conversation_id);
-  item.innerHTML = `
-    <div class="feed-top">
-      <span class="feed-platform ${platClass}">${platLabel}</span>
-      <span style="font-size:11px;color:var(--muted2)">${data.customer_id || 'Unknown'}</span>
-      <span class="feed-time">${time}</span>
-    </div>
-    <div class="feed-msg">${msg}</div>
-  `;
-  feed.insertBefore(item, feed.firstChild);
-
-  // সর্বোচ্চ ৫০টি রাখো
-  while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+  item.className='feed-item';
+  item.onclick=()=>data.conversation_id&&openConversation(data.conversation_id);
+  item.innerHTML=`<div class="feed-top"><span class="feed-platform ${platClass}">${platLabel}</span><span style="font-size:11px;color:var(--muted2)">${data.customer_id||'Unknown'}</span><span class="feed-time">${time}</span></div><div class="feed-msg">${msg}</div>`;
+  feed.insertBefore(item,feed.firstChild);
+  while(feed.children.length>50) feed.removeChild(feed.lastChild);
 }
 
-// ── Toast ─────────────────────────────────────────────────────
+// ════════════════════════════════════
+//   TOAST
+// ════════════════════════════════════
 function showToast(msg, type='info') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = msg;
+  toast.className=`toast ${type}`;
+  toast.textContent=msg;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  setTimeout(()=>toast.remove(), 3500);
 }
 
-// ── Demo Feed ─────────────────────────────────────────────────
+// ════════════════════════════════════
+//   DEMO FEED
+// ════════════════════════════════════
 function startDemoFeed() {
-  // Demo conversations দেখাও
-  DEMO_CONVS.forEach(c => addFeedItem({
-    type:'ai_reply',
-    conversation_id: c.id,
-    customer_id: c.customer_id,
-    platform: c.platform,
-    user_message: c.last_message?.content,
-    timestamp: c.updated_at
-  }));
+  DEMO_CONVS.forEach(c=>addFeedItem({type:'ai_reply',conversation_id:c.id,customer_id:c.customer_id,platform:c.platform,user_message:c.last_message?.content,timestamp:c.updated_at}));
 }
 
-// ── Start ─────────────────────────────────────────────────────
-init().then(() => startDemoFeed());
+// ── START handled by login ──
+// init() is called after successful login
+</script>
+<!-- ════════════════════
+     PAGE: ANALYTICS
+════════════════════ -->
+<div class="analytics-page" id="page-analytics" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">📊 Analytics</div>
+      <div class="page-subtitle">পারফরম্যান্স ট্র্যাক করুন — রিয়েল-টাইম ও ঐতিহাসিক ডেটা</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <select id="analytics-range" onchange="loadAnalytics()" style="background:var(--card);border:1px solid var(--border2);border-radius:7px;padding:7px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;cursor:pointer">
+        <option value="7">শেষ ৭ দিন</option>
+        <option value="30" selected>শেষ ৩০ দিন</option>
+        <option value="90">শেষ ৩ মাস</option>
+      </select>
+      <button class="btn btn-ghost" onclick="loadAnalytics()">🔄 রিফ্রেশ</button>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:18px">
+
+    <!-- KPI Row -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" id="kpi-row">
+      <div class="an-kpi" id="kpi-total"><div class="kpi-num" style="color:var(--accent)">0</div><div class="kpi-lbl">মোট মেসেজ</div><div class="kpi-delta" id="kpi-total-d">—</div></div>
+      <div class="an-kpi" id="kpi-ai"><div class="kpi-num" style="color:var(--accent3)">0%</div><div class="kpi-lbl">AI সমাধান হার</div><div class="kpi-delta" id="kpi-ai-d">—</div></div>
+      <div class="an-kpi" id="kpi-resp"><div class="kpi-num" style="color:var(--accent4)">0s</div><div class="kpi-lbl">গড় রেসপন্স টাইম</div><div class="kpi-delta" id="kpi-resp-d">—</div></div>
+      <div class="an-kpi" id="kpi-csat"><div class="kpi-num" style="color:var(--accent5)">0%</div><div class="kpi-lbl">সন্তুষ্টি স্কোর</div><div class="kpi-delta" id="kpi-csat-d">—</div></div>
+      <div class="an-kpi" id="kpi-new"><div class="kpi-num" style="color:var(--accent2)">0</div><div class="kpi-lbl">নতুন কাস্টমার</div><div class="kpi-delta" id="kpi-new-d">—</div></div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+      <!-- Line Chart: Daily Messages -->
+      <div class="an-card">
+        <div class="an-card-title">📈 দৈনিক মেসেজ ট্র্যাকার</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="chart-daily"></canvas>
+        </div>
+      </div>
+      <!-- Donut: Platform -->
+      <div class="an-card">
+        <div class="an-card-title">🌐 প্ল্যাটফর্ম বিভাজন</div>
+        <div class="chart-wrap" style="height:200px;display:flex;align-items:center;justify-content:center">
+          <canvas id="chart-platform" style="max-width:180px;max-height:180px"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <!-- Bar: Intent Distribution -->
+      <div class="an-card">
+        <div class="an-card-title">🎯 Intent বিশ্লেষণ</div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="chart-intent"></canvas>
+        </div>
+      </div>
+      <!-- Bar: Hourly Heatmap -->
+      <div class="an-card">
+        <div class="an-card-title">🕐 Peak Hours (ঘণ্টা অনুযায়ী)</div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="chart-hourly"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 3 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <!-- AI vs Human -->
+      <div class="an-card">
+        <div class="an-card-title">🤖 AI vs Human রিপ্লাই</div>
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="chart-aivshu"></canvas>
+        </div>
+      </div>
+      <!-- Response Time Trend -->
+      <div class="an-card">
+        <div class="an-card-title">⚡ রেসপন্স টাইম ট্রেন্ড</div>
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="chart-resptime"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Issues Table -->
+    <div class="an-card">
+      <div class="an-card-title">🔥 সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্নের ধরন</div>
+      <div id="top-issues-table" style="margin-top:12px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════
+     PAGE: ORDERS
+════════════════════ -->
+<div class="orders-page" id="page-orders" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">📦 Order Management</div>
+      <div class="page-subtitle">সব অর্ডার দেখুন, স্ট্যাটাস বদলান, ট্র্যাক করুন</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span style="font-size:12px;font-family:var(--mono);color:var(--muted2)">মোট: <span id="order-total-count" style="color:var(--accent)">0</span></span>
+      <button class="btn btn-ghost" onclick="loadOrders()">🔄 রিফ্রেশ</button>
+      <button class="btn btn-primary" onclick="openNewOrderModal()">➕ নতুন অর্ডার</button>
+    </div>
+  </div>
+
+  <!-- Order Stats -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0" id="order-stats-row">
+    <div class="ord-stat-card" style="border-color:rgba(0,229,255,.3)"><div class="ord-stat-num" style="color:var(--accent)" id="os-all">0</div><div class="ord-stat-lbl">সব অর্ডার</div></div>
+    <div class="ord-stat-card" style="border-color:rgba(255,190,11,.3)"><div class="ord-stat-num" style="color:var(--accent4)" id="os-pending">0</div><div class="ord-stat-lbl">Pending</div></div>
+    <div class="ord-stat-card" style="border-color:rgba(168,85,247,.3)"><div class="ord-stat-num" style="color:var(--accent5)" id="os-processing">0</div><div class="ord-stat-lbl">Processing</div></div>
+    <div class="ord-stat-card" style="border-color:rgba(57,255,20,.3)"><div class="ord-stat-num" style="color:var(--accent3)" id="os-delivered">0</div><div class="ord-stat-lbl">Delivered</div></div>
+    <div class="ord-stat-card" style="border-color:rgba(255,77,109,.3)"><div class="ord-stat-num" style="color:var(--accent2)" id="os-cancelled">0</div><div class="ord-stat-lbl">Cancelled</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div style="display:flex;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;align-items:center">
+    <input class="search-input" id="order-search" placeholder="🔍 অর্ডার ID, নাম বা ফোন খুঁজুন..." oninput="filterOrders()" style="max-width:280px">
+    <select class="filter-select" id="order-filter-status" onchange="filterOrders()">
+      <option value="all">সব স্ট্যাটাস</option>
+      <option value="pending">Pending</option>
+      <option value="processing">Processing</option>
+      <option value="shipped">Shipped</option>
+      <option value="delivered">Delivered</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+    <select class="filter-select" id="order-filter-platform" onchange="filterOrders()">
+      <option value="all">সব প্ল্যাটফর্ম</option>
+      <option value="whatsapp">WhatsApp</option>
+      <option value="web">Web</option>
+      <option value="telegram">Telegram</option>
+    </select>
+    <div style="margin-left:auto;font-size:11px;font-family:var(--mono);color:var(--muted2)">
+      দেখাচ্ছে: <span id="order-showing">0</span>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div style="flex:1;overflow-y:auto;padding:0">
+    <table id="orders-table" style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:var(--surface);position:sticky;top:0;z-index:10">
+          <th class="tbl-th" onclick="sortOrders('id')">অর্ডার ID ↕</th>
+          <th class="tbl-th">কাস্টমার</th>
+          <th class="tbl-th">পণ্য</th>
+          <th class="tbl-th" onclick="sortOrders('total')">মূল্য ↕</th>
+          <th class="tbl-th">প্ল্যাটফর্ম</th>
+          <th class="tbl-th" onclick="sortOrders('status')">স্ট্যাটাস ↕</th>
+          <th class="tbl-th" onclick="sortOrders('created_at')">তারিখ ↕</th>
+          <th class="tbl-th">অ্যাকশন</th>
+        </tr>
+      </thead>
+      <tbody id="orders-tbody">
+        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">লোড হচ্ছে...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- New/Edit Order Modal -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal" style="min-width:500px">
+    <div class="modal-header">
+      <div class="modal-title" id="order-modal-title">➕ নতুন অর্ডার</div>
+      <button class="modal-close" onclick="closeOrderModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="om-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">কাস্টমার নাম</label>
+          <input class="form-input" id="om-name" placeholder="নাম লিখুন">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ফোন নম্বর</label>
+          <input class="form-input" id="om-phone" placeholder="01XXXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">পণ্যের নাম</label>
+          <input class="form-input" id="om-product" placeholder="পণ্যের নাম">
+        </div>
+        <div class="form-group">
+          <label class="form-label">মূল্য (৳)</label>
+          <input class="form-input" id="om-price" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">পরিমাণ</label>
+          <input class="form-input" id="om-qty" type="number" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">প্ল্যাটফর্ম</label>
+          <select class="form-input" id="om-platform">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="web">Web</option>
+            <option value="telegram">Telegram</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">স্ট্যাটাস</label>
+          <select class="form-input" id="om-status">
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ট্র্যাকিং নম্বর</label>
+          <input class="form-input" id="om-tracking" placeholder="TRK-XXXXX">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:4px">
+        <label class="form-label">ঠিকানা</label>
+        <textarea class="form-input" id="om-address" rows="2" placeholder="ডেলিভারি ঠিকানা"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">নোট</label>
+        <input class="form-input" id="om-note" placeholder="অতিরিক্ত তথ্য...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeOrderModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveOrder()">✅ সংরক্ষণ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="order-detail-modal">
+  <div class="modal" style="min-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">📦 অর্ডার বিবরণ</div>
+      <button class="modal-close" onclick="document.getElementById('order-detail-modal').classList.remove('open')">✕</button>
+    </div>
+    <div id="order-detail-body" class="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('order-detail-modal').classList.remove('open')">বন্ধ</button>
+      <button class="btn btn-primary" onclick="notifyCustomer()">📱 কাস্টমারকে জানান</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Analytics */
+.an-kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:10px;
+  padding: 16px;
+  text-align:center;
+  transition: all .2s;
+}
+.an-kpi:hover { border-color: var(--border2); transform: translateY(-1px); }
+.kpi-num { font-size:26px; font-weight:800; font-family:var(--mono); line-height:1; margin-bottom:5px; }
+.kpi-lbl { font-size:11px; color:var(--muted2); }
+.kpi-delta { font-size:11px; font-family:var(--mono); color:var(--accent3); margin-top:4px; }
+.kpi-delta.down { color: var(--accent2); }
+
+.an-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:10px;
+  padding: 16px;
+}
+.an-card-title {
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding-bottom:10px;
+  border-bottom: 1px solid var(--border);
+}
+.chart-wrap { position:relative; width:100%; }
+
+/* Orders */
+.ord-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius:9px;
+  padding: 12px 14px;
+  text-align:center;
+  border-top-width: 2px;
+}
+.ord-stat-num { font-size:22px; font-weight:800; font-family:var(--mono); }
+.ord-stat-lbl { font-size:10px; color:var(--muted2); margin-top:2px; }
+
+.tbl-th {
+  padding: 10px 14px;
+  text-align:left;
+  font-size:11px;
+  font-family:var(--mono);
+  color:var(--muted2);
+  letter-spacing:1px;
+  text-transform:uppercase;
+  border-bottom: 1px solid var(--border);
+  cursor:pointer;
+  white-space:nowrap;
+  user-select:none;
+}
+.tbl-th:hover { color:var(--text); }
+.tbl-td {
+  padding: 11px 14px;
+  font-size:12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align:middle;
+}
+.tbl-tr:hover td { background: var(--card); }
+
+.order-status {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11px;
+  font-family:var(--mono);
+  padding: 3px 9px;
+  border-radius:5px;
+}
+.st-pending    { background:rgba(255,190,11,.1);  color:var(--accent4); border:1px solid rgba(255,190,11,.25); }
+.st-processing { background:rgba(168,85,247,.1);  color:var(--accent5); border:1px solid rgba(168,85,247,.25); }
+.st-shipped    { background:rgba(0,229,255,.1);    color:var(--accent);  border:1px solid rgba(0,229,255,.25); }
+.st-delivered  { background:rgba(57,255,20,.1);   color:var(--accent3); border:1px solid rgba(57,255,20,.25); }
+.st-cancelled  { background:rgba(255,77,109,.1);  color:var(--accent2); border:1px solid rgba(255,77,109,.25); }
+
+.issue-bar-row {
+  display:flex; align-items:center; gap:10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size:12px;
+}
+.issue-bar-row:last-child { border-bottom:none; }
+.issue-bar-label { width:140px; flex-shrink:0; color:var(--muted2); }
+.issue-bar-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+.issue-bar-fill  { height:100%; border-radius:4px; transition: width .6s ease; }
+.issue-bar-count { width:40px; text-align:right; font-family:var(--mono); color:var(--muted2); }
+</style>
+
+<script>
+// ════════════════════════════════════
+//   PAGE MAP EXTENSION
+// ════════════════════════════════════
+const _origShowPage = showPage;
+showPage = function(page, tabEl) {
+  // Handle new pages
+  document.querySelectorAll('.analytics-page,.orders-page').forEach(p=>{
+    p.style.display='none';
+    p.classList.remove('active');
+  });
+  _origShowPage(page, tabEl);
+  if (page==='analytics') {
+    const el=document.getElementById('page-analytics');
+    el.style.display='flex'; el.classList.add('active');
+    loadAnalytics();
+  }
+  if (page==='orders') {
+    const el=document.getElementById('page-orders');
+    el.style.display='flex'; el.classList.add('active');
+    loadOrders();
+  }
+};
+
+// ════════════════════════════════════
+//   CHART.JS LOADER
+// ════════════════════════════════════
+let chartJsLoaded = false;
+let chartInstances = {};
+
+function loadChartJS(cb) {
+  if (chartJsLoaded) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+  s.onload = () => { chartJsLoaded=true; cb(); };
+  document.head.appendChild(s);
+}
+
+// ════════════════════════════════════
+//   ANALYTICS DATA
+// ════════════════════════════════════
+function genDemoAnalytics(days) {
+  const labels=[], msgs=[], aiR=[], huR=[], resp=[];
+  for (let i=days-1;i>=0;i--) {
+    const d=new Date(Date.now()-i*86400000);
+    labels.push(d.toLocaleDateString('bn-BD',{month:'short',day:'numeric'}));
+    const base=Math.floor(Math.random()*40)+20;
+    msgs.push(base);
+    const ai=Math.floor(base*(0.7+Math.random()*0.2));
+    aiR.push(ai); huR.push(base-ai);
+    resp.push((Math.random()*2+0.5).toFixed(1));
+  }
+  return {
+    labels, msgs, aiR, huR, resp,
+    platform:{web:Math.floor(Math.random()*30)+15, whatsapp:Math.floor(Math.random()*50)+30, telegram:Math.floor(Math.random()*20)+5},
+    intent:{product_info:42, order_tracking:35, refund_return:18, saas_support:28, payment:15, general:22},
+    hourly: Array.from({length:24},(_,h)=>{
+      if(h<8||h>22) return Math.floor(Math.random()*5);
+      if(h>=10&&h<=13||h>=18&&h<=21) return Math.floor(Math.random()*25)+15;
+      return Math.floor(Math.random()*15)+5;
+    }),
+    kpis: {
+      total: msgs.reduce((a,b)=>a+b,0),
+      aiRate: Math.floor(Math.random()*15+75),
+      avgResp: (Math.random()*1+0.8).toFixed(1),
+      csat: Math.floor(Math.random()*10+85),
+      newCustomers: Math.floor(Math.random()*20+10)
+    }
+  };
+}
+
+async function loadAnalytics() {
+  const days = parseInt(document.getElementById('analytics-range').value)||30;
+  let data;
+  try {
+    const r = await fetch(`${API}/api/analytics?days=${days}`);
+    data = r.ok ? await r.json() : genDemoAnalytics(days);
+  } catch { data = genDemoAnalytics(days); }
+  renderKPIs(data.kpis||{});
+  loadChartJS(()=>renderCharts(data));
+  renderTopIssues(data.intent||{});
+}
+
+function renderKPIs(k) {
+  document.getElementById('kpi-total').querySelector('.kpi-num').textContent   = (k.total||0).toLocaleString();
+  document.getElementById('kpi-ai').querySelector('.kpi-num').textContent       = `${k.aiRate||0}%`;
+  document.getElementById('kpi-resp').querySelector('.kpi-num').textContent     = `${k.avgResp||0}s`;
+  document.getElementById('kpi-csat').querySelector('.kpi-num').textContent     = `${k.csat||0}%`;
+  document.getElementById('kpi-new').querySelector('.kpi-num').textContent      = k.newCustomers||0;
+  document.getElementById('kpi-total-d').textContent = '↑ গত পিরিয়ড থেকে';
+  document.getElementById('kpi-ai-d').textContent    = (k.aiRate>=75)?'✅ লক্ষ্যমাত্রা অর্জিত':'⚠️ উন্নতি প্রয়োজন';
+  document.getElementById('kpi-resp-d').textContent  = (k.avgResp<=1.5)?'✅ দ্রুত':'⚠️ ধীর';
+  document.getElementById('kpi-csat-d').textContent  = `${k.csat>=80?'😊 ভালো':'😐 গড়'}`;
+  document.getElementById('kpi-new-d').textContent   = 'এই পিরিয়ডে';
+}
+
+function renderCharts(data) {
+  const C = Chart;
+  const defaults = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{backgroundColor:'#131920',borderColor:'#1e2730',borderWidth:1,titleColor:'#dde6f0',bodyColor:'#8aa0b0',titleFont:{family:'Fira Code',size:11},bodyFont:{family:'Fira Code',size:11}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a7080',font:{family:'Fira Code',size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a7080',font:{family:'Fira Code',size:10}}}}
+  };
+
+  // 1. Daily Messages Line
+  destroyChart('chart-daily');
+  chartInstances['chart-daily'] = new C(document.getElementById('chart-daily'), {
+    type:'line',
+    data:{
+      labels: data.labels||[],
+      datasets:[
+        {label:'মোট',data:data.msgs||[],borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.07)',tension:.4,fill:true,pointRadius:2,pointBackgroundColor:'#00e5ff'},
+        {label:'AI',data:data.aiR||[],borderColor:'#39ff14',backgroundColor:'rgba(57,255,20,.05)',tension:.4,fill:true,pointRadius:2,pointBackgroundColor:'#39ff14'},
+        {label:'Human',data:data.huR||[],borderColor:'#ffbe0b',backgroundColor:'rgba(255,190,11,.05)',tension:.4,fill:true,pointRadius:2,pointBackgroundColor:'#ffbe0b'},
+      ]
+    },
+    options:{...defaults,plugins:{...defaults.plugins,legend:{display:true,labels:{color:'#8aa0b0',font:{family:'Fira Code',size:10},boxWidth:10}}}}
+  });
+
+  // 2. Platform Donut
+  destroyChart('chart-platform');
+  const pd=data.platform||{};
+  chartInstances['chart-platform'] = new C(document.getElementById('chart-platform'), {
+    type:'doughnut',
+    data:{
+      labels:['Web','WhatsApp','Telegram'],
+      datasets:[{data:[pd.web||0,pd.whatsapp||0,pd.telegram||0],backgroundColor:['rgba(0,229,255,.7)','rgba(37,211,102,.7)','rgba(41,182,246,.7)'],borderColor:['#00e5ff','#25d366','#29b6f6'],borderWidth:1,hoverOffset:6}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:'#8aa0b0',font:{family:'Fira Code',size:10},boxWidth:10,padding:8}},tooltip:{backgroundColor:'#131920',borderColor:'#1e2730',borderWidth:1,titleColor:'#dde6f0',bodyColor:'#8aa0b0',titleFont:{family:'Fira Code',size:11},bodyFont:{family:'Fira Code',size:11}}},cutout:'65%'}
+  });
+
+  // 3. Intent Bar
+  destroyChart('chart-intent');
+  const id=data.intent||{};
+  const iLabels=['পণ্য তথ্য','অর্ডার','রিফান্ড','SaaS','পেমেন্ট','সাধারণ'];
+  const iVals=[id.product_info||0,id.order_tracking||0,id.refund_return||0,id.saas_support||0,id.payment||0,id.general||0];
+  chartInstances['chart-intent'] = new C(document.getElementById('chart-intent'), {
+    type:'bar',
+    data:{labels:iLabels,datasets:[{data:iVals,backgroundColor:['rgba(0,229,255,.6)','rgba(255,190,11,.6)','rgba(255,77,109,.6)','rgba(168,85,247,.6)','rgba(57,255,20,.6)','rgba(138,160,176,.6)'],borderRadius:5,borderSkipped:false}]},
+    options:{...defaults,indexAxis:'y',plugins:{...defaults.plugins}}
+  });
+
+  // 4. Hourly Heatmap Bar
+  destroyChart('chart-hourly');
+  const hLabels=Array.from({length:24},(_,i)=>`${i}:00`);
+  chartInstances['chart-hourly'] = new C(document.getElementById('chart-hourly'), {
+    type:'bar',
+    data:{labels:hLabels,datasets:[{data:data.hourly||[],backgroundColor:data.hourly?.map(v=>v>20?'rgba(255,77,109,.7)':v>10?'rgba(255,190,11,.6)':'rgba(0,229,255,.4)')||[],borderRadius:3,borderSkipped:false}]},
+    options:{...defaults,plugins:{...defaults.plugins}}
+  });
+
+  // 5. AI vs Human Line
+  destroyChart('chart-aivshu');
+  const slice=n=>(data.labels||[]).slice(-n);
+  chartInstances['chart-aivshu'] = new C(document.getElementById('chart-aivshu'), {
+    type:'bar',
+    data:{
+      labels:slice(14),
+      datasets:[
+        {label:'AI',data:(data.aiR||[]).slice(-14),backgroundColor:'rgba(57,255,20,.6)',borderRadius:3,borderSkipped:false},
+        {label:'Human',data:(data.huR||[]).slice(-14),backgroundColor:'rgba(255,190,11,.6)',borderRadius:3,borderSkipped:false}
+      ]
+    },
+    options:{...defaults,plugins:{...defaults.plugins,legend:{display:true,labels:{color:'#8aa0b0',font:{family:'Fira Code',size:10},boxWidth:10}}},scales:{...defaults.scales,x:{...defaults.scales.x,stacked:true},y:{...defaults.scales.y,stacked:true}}}
+  });
+
+  // 6. Response Time Line
+  destroyChart('chart-resptime');
+  chartInstances['chart-resptime'] = new C(document.getElementById('chart-resptime'), {
+    type:'line',
+    data:{
+      labels:slice(14),
+      datasets:[{label:'রেসপন্স (সেকেন্ড)',data:(data.resp||[]).slice(-14).map(Number),borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,.07)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#a855f7'}]
+    },
+    options:{...defaults,plugins:{...defaults.plugins,legend:{display:false}}}
+  });
+}
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function renderTopIssues(intentData) {
+  const entries=Object.entries(intentData).sort((a,b)=>b[1]-a[1]);
+  const max=entries[0]?.[1]||1;
+  const labels={product_info:'পণ্য তথ্য',order_tracking:'অর্ডার ট্র্যাকিং',refund_return:'রিফান্ড/রিটার্ন',saas_support:'SaaS সাপোর্ট',payment:'পেমেন্ট',general:'সাধারণ'};
+  const colors=['#00e5ff','#ffbe0b','#ff4d6d','#a855f7','#39ff14','#8aa0b0'];
+  document.getElementById('top-issues-table').innerHTML=entries.map(([k,v],i)=>`
+    <div class="issue-bar-row">
+      <div class="issue-bar-label">${labels[k]||k}</div>
+      <div class="issue-bar-track"><div class="issue-bar-fill" style="width:${(v/max*100).toFixed(0)}%;background:${colors[i]||'#8aa0b0'}"></div></div>
+      <div class="issue-bar-count">${v}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════
+//   ORDERS DATA
+// ════════════════════════════════════
+let ordersData = [];
+let orderSortKey = 'created_at';
+let orderSortAsc = false;
+let orderEditId = null;
+
+const DEMO_ORDERS = [
+  {id:'ORD-001',customer_name:'রাহেলা বেগম',phone:'01711111111',product:'Samsung A54 Back Cover',qty:2,price:350,total:700,platform:'whatsapp',status:'shipped',tracking:'TRK-78421',address:'মিরপুর-১০, ঢাকা',note:'দ্রুত ডেলিভারি',created_at:new Date(Date.now()-86400000*2).toISOString()},
+  {id:'ORD-002',customer_name:'করিম সাহেব',phone:'01811111111',product:'Power Bank 10000mAh',qty:1,price:1200,total:1200,platform:'web',status:'delivered',tracking:'TRK-78422',address:'উত্তরা, ঢাকা',note:'',created_at:new Date(Date.now()-86400000*5).toISOString()},
+  {id:'ORD-003',customer_name:'সুমাইয়া আক্তার',phone:'01911111111',product:'iPhone 14 Case',qty:1,price:450,total:450,platform:'whatsapp',status:'pending',tracking:'',address:'চট্টগ্রাম',note:'কালো রঙ চাই',created_at:new Date(Date.now()-3600000*3).toISOString()},
+  {id:'ORD-004',customer_name:'মাহফুজ রহমান',phone:'01611111111',product:'Wireless Earphone',qty:1,price:800,total:800,platform:'telegram',status:'processing',tracking:'TRK-78424',address:'সিলেট',note:'',created_at:new Date(Date.now()-86400000).toISOString()},
+  {id:'ORD-005',customer_name:'তানিয়া হোসেন',phone:'01511111111',product:'Screen Protector Pack',qty:3,price:150,total:450,platform:'web',status:'cancelled',tracking:'',address:'রাজশাহী',note:'কাস্টমার ক্যান্সেল করেছেন',created_at:new Date(Date.now()-86400000*3).toISOString()},
+  {id:'ORD-006',customer_name:'জামাল উদ্দিন',phone:'01311111111',product:'Type-C Fast Charger',qty:2,price:350,total:700,platform:'whatsapp',status:'delivered',tracking:'TRK-78426',address:'খুলনা',note:'',created_at:new Date(Date.now()-86400000*7).toISOString()},
+];
+
+async function loadOrders() {
+  try {
+    const r = await fetch(`${API}/api/orders`);
+    ordersData = r.ok ? await r.json() : DEMO_ORDERS;
+  } catch { ordersData = DEMO_ORDERS; }
+  updateOrderStats();
+  renderOrders(ordersData);
+}
+
+function updateOrderStats() {
+  document.getElementById('order-total-count').textContent = ordersData.length;
+  document.getElementById('os-all').textContent       = ordersData.length;
+  document.getElementById('os-pending').textContent   = ordersData.filter(o=>o.status==='pending').length;
+  document.getElementById('os-processing').textContent= ordersData.filter(o=>o.status==='processing').length;
+  document.getElementById('os-delivered').textContent = ordersData.filter(o=>o.status==='delivered').length;
+  document.getElementById('os-cancelled').textContent = ordersData.filter(o=>o.status==='cancelled').length;
+}
+
+function renderOrders(data) {
+  document.getElementById('order-showing').textContent = data.length;
+  const tbody = document.getElementById('orders-tbody');
+  if (!data.length) {
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">কোনো অর্ডার নেই</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(o=>`
+    <tr class="tbl-tr">
+      <td class="tbl-td"><span style="font-family:var(--mono);color:var(--accent);cursor:pointer" onclick="viewOrder('${o.id}')">${o.id}</span></td>
+      <td class="tbl-td">
+        <div style="font-weight:600;font-size:12px">${o.customer_name}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted2)">${o.phone}</div>
+      </td>
+      <td class="tbl-td">
+        <div style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.product}</div>
+        <div style="font-size:10px;color:var(--muted2)">x${o.qty}</div>
+      </td>
+      <td class="tbl-td"><span style="font-family:var(--mono);font-weight:700;color:var(--accent4)">৳${o.total?.toLocaleString()}</span></td>
+      <td class="tbl-td"><span style="font-size:13px">${platformEmoji(o.platform)}</span></td>
+      <td class="tbl-td">
+        <select class="order-status-select st-${o.status}" onchange="updateOrderStatus('${o.id}',this.value)" style="background:transparent;border:none;cursor:pointer;font-size:11px;font-family:var(--mono);color:inherit;outline:none">
+          <option value="pending"   ${o.status==='pending'   ?'selected':''}>⏳ Pending</option>
+          <option value="processing"${o.status==='processing'?'selected':''}>🔄 Processing</option>
+          <option value="shipped"   ${o.status==='shipped'   ?'selected':''}>🚚 Shipped</option>
+          <option value="delivered" ${o.status==='delivered' ?'selected':''}>✅ Delivered</option>
+          <option value="cancelled" ${o.status==='cancelled' ?'selected':''}>❌ Cancelled</option>
+        </select>
+      </td>
+      <td class="tbl-td" style="font-family:var(--mono);font-size:11px;color:var(--muted2)">${new Date(o.created_at).toLocaleDateString('bn-BD')}</td>
+      <td class="tbl-td">
+        <div style="display:flex;gap:5px">
+          <button class="kb-btn kb-btn-edit" onclick="editOrder('${o.id}')" style="padding:3px 8px;font-size:10px">✏️</button>
+          <button class="kb-btn" onclick="viewOrder('${o.id}')" style="padding:3px 8px;font-size:10px;background:rgba(168,85,247,.1);color:var(--accent5);border:1px solid rgba(168,85,247,.2)">👁</button>
+          <button class="kb-btn kb-btn-del" onclick="deleteOrder('${o.id}')" style="padding:3px 8px;font-size:10px">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterOrders() {
+  const q    = document.getElementById('order-search').value.toLowerCase();
+  const st   = document.getElementById('order-filter-status').value;
+  const plat = document.getElementById('order-filter-platform').value;
+  let filtered = ordersData.filter(o=>{
+    const matchQ    = !q || o.id.toLowerCase().includes(q) || o.customer_name.toLowerCase().includes(q) || o.phone.includes(q) || o.product.toLowerCase().includes(q);
+    const matchSt   = st==='all'   || o.status===st;
+    const matchPlat = plat==='all' || o.platform===plat;
+    return matchQ && matchSt && matchPlat;
+  });
+  renderOrders(filtered);
+}
+
+function sortOrders(key) {
+  if (orderSortKey===key) orderSortAsc=!orderSortAsc;
+  else { orderSortKey=key; orderSortAsc=true; }
+  ordersData.sort((a,b)=>{
+    let av=a[key],bv=b[key];
+    if (typeof av==='string') av=av.toLowerCase(), bv=bv.toLowerCase();
+    if (av<bv) return orderSortAsc?-1:1;
+    if (av>bv) return orderSortAsc?1:-1;
+    return 0;
+  });
+  filterOrders();
+}
+
+async function updateOrderStatus(id, status) {
+  const idx=ordersData.findIndex(o=>o.id===id);
+  if (idx>-1) ordersData[idx].status=status;
+  updateOrderStats();
+  try { await fetch(`${API}/api/orders/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}); } catch {}
+  showToast(`অর্ডার ${id} → ${status} ✅`,'success');
+}
+
+function viewOrder(id) {
+  const o = ordersData.find(o=>o.id===id);
+  if (!o) return;
+  document.getElementById('order-detail-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="info-row"><span class="info-key">অর্ডার ID</span><span class="info-val" style="color:var(--accent)">${o.id}</span></div>
+      <div class="info-row"><span class="info-key">স্ট্যাটাস</span><span class="info-val"><span class="order-status st-${o.status}">${o.status}</span></span></div>
+      <div class="info-row"><span class="info-key">কাস্টমার</span><span class="info-val">${o.customer_name}</span></div>
+      <div class="info-row"><span class="info-key">ফোন</span><span class="info-val">${o.phone}</span></div>
+      <div class="info-row"><span class="info-key">পণ্য</span><span class="info-val">${o.product}</span></div>
+      <div class="info-row"><span class="info-key">পরিমাণ × মূল্য</span><span class="info-val">${o.qty} × ৳${o.price} = ৳${o.total}</span></div>
+      <div class="info-row"><span class="info-key">প্ল্যাটফর্ম</span><span class="info-val">${o.platform}</span></div>
+      <div class="info-row"><span class="info-key">ট্র্যাকিং</span><span class="info-val" style="color:var(--accent3)">${o.tracking||'—'}</span></div>
+    </div>
+    <div class="info-row" style="margin-top:8px"><span class="info-key">ঠিকানা</span><span class="info-val">${o.address||'—'}</span></div>
+    ${o.note?`<div class="info-row"><span class="info-key">নোট</span><span class="info-val" style="color:var(--accent4)">${o.note}</span></div>`:''}
+    <div class="info-row"><span class="info-key">তারিখ</span><span class="info-val">${new Date(o.created_at).toLocaleString('bn-BD')}</span></div>`;
+  document.getElementById('order-detail-modal').classList.add('open');
+  document.getElementById('order-detail-modal').dataset.currentId = id;
+}
+
+function openNewOrderModal() {
+  orderEditId=null;
+  document.getElementById('order-modal-title').textContent='➕ নতুন অর্ডার';
+  ['om-id','om-name','om-phone','om-product','om-tracking','om-address','om-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('om-qty').value='1';
+  document.getElementById('om-price').value='';
+  document.getElementById('om-status').value='pending';
+  document.getElementById('order-modal').classList.add('open');
+}
+
+function editOrder(id) {
+  const o=ordersData.find(o=>o.id===id);
+  if (!o) return;
+  orderEditId=id;
+  document.getElementById('order-modal-title').textContent='✏️ অর্ডার সম্পাদনা';
+  document.getElementById('om-id').value=o.id;
+  document.getElementById('om-name').value=o.customer_name;
+  document.getElementById('om-phone').value=o.phone;
+  document.getElementById('om-product').value=o.product;
+  document.getElementById('om-price').value=o.price;
+  document.getElementById('om-qty').value=o.qty;
+  document.getElementById('om-platform').value=o.platform;
+  document.getElementById('om-status').value=o.status;
+  document.getElementById('om-tracking').value=o.tracking||'';
+  document.getElementById('om-address').value=o.address||'';
+  document.getElementById('om-note').value=o.note||'';
+  document.getElementById('order-modal').classList.add('open');
+}
+
+async function saveOrder() {
+  const name=document.getElementById('om-name').value.trim();
+  const phone=document.getElementById('om-phone').value.trim();
+  const product=document.getElementById('om-product').value.trim();
+  const price=parseFloat(document.getElementById('om-price').value)||0;
+  const qty=parseInt(document.getElementById('om-qty').value)||1;
+  if (!name||!product){showToast('নাম ও পণ্য লিখুন','error');return;}
+  const order={
+    id: orderEditId || `ORD-${String(ordersData.length+1).padStart(3,'0')}`,
+    customer_name:name, phone, product, price, qty, total:price*qty,
+    platform:document.getElementById('om-platform').value,
+    status:document.getElementById('om-status').value,
+    tracking:document.getElementById('om-tracking').value,
+    address:document.getElementById('om-address').value,
+    note:document.getElementById('om-note').value,
+    created_at: orderEditId ? ordersData.find(o=>o.id===orderEditId)?.created_at : new Date().toISOString()
+  };
+  if (orderEditId) {
+    const idx=ordersData.findIndex(o=>o.id===orderEditId);
+    if (idx>-1) ordersData[idx]=order;
+    try { await fetch(`${API}/api/orders/${orderEditId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)}); } catch {}
+    showToast('অর্ডার আপডেট হয়েছে ✅','success');
+  } else {
+    ordersData.unshift(order);
+    try { await fetch(`${API}/api/orders`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)}); } catch {}
+    showToast('নতুন অর্ডার যোগ হয়েছে ✅','success');
+  }
+  updateOrderStats();
+  filterOrders();
+  closeOrderModal();
+}
+
+function deleteOrder(id) {
+  if (!confirm('এই অর্ডারটি মুছে ফেলবেন?')) return;
+  ordersData = ordersData.filter(o=>o.id!==id);
+  updateOrderStats(); filterOrders();
+  showToast('অর্ডার মুছে ফেলা হয়েছে','warn');
+  fetch(`${API}/api/orders/${id}`,{method:'DELETE'}).catch(()=>{});
+}
+
+function closeOrderModal() { document.getElementById('order-modal').classList.remove('open'); }
+
+function notifyCustomer() {
+  const id=document.getElementById('order-detail-modal').dataset.currentId;
+  const o=ordersData.find(o=>o.id===id);
+  if (!o||!o.phone) {showToast('ফোন নম্বর নেই','error');return;}
+  const msg=`আপনার অর্ডার ${o.id} এর আপডেট: স্ট্যাটাস "${o.status}" ${o.tracking?`। ট্র্যাকিং: ${o.tracking}`:''}। ধন্যবাদ! 🙏`;
+  document.getElementById('order-detail-modal').classList.remove('open');
+  showPage('wa', document.querySelector('.nav-tab:nth-child(4)'));
+  setTimeout(()=>{
+    document.getElementById('wa-single-phone').value=o.phone;
+    document.getElementById('wa-single-msg').value=msg;
+    showToast('WhatsApp এ নম্বর ও মেসেজ সেট হয়েছে ✅','success');
+  },300);
+}
+
+// ════════════════════════════════════
+//   AUTH SYSTEM
+// ════════════════════════════════════
+const USERS = {
+  admin:  { pass:'admin123',  name:'Admin User',    role:'admin',  avatar:'👑' },
+  agent:  { pass:'agent123',  name:'Support Agent', role:'agent',  avatar:'🧑‍💼' },
+  viewer: { pass:'viewer123', name:'Viewer',        role:'viewer', avatar:'👀' },
+};
+let currentUser = null;
+
+function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const btn = document.getElementById('login-btn');
+  const btnText = document.getElementById('login-btn-text');
+
+  btnText.textContent = '⏳ যাচাই করছি...';
+  btn.style.opacity = '0.7';
+
+  setTimeout(async () => {
+    const user = USERS[username];
+    if (user && user.pass === password) {
+      currentUser = { username, ...user };
+      if (document.getElementById('remember-me').checked) {
+        localStorage.setItem('sara-session', JSON.stringify({ username, pass: password }));
+      }
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('login-screen').style.opacity = '0';
+      document.getElementById('login-screen').style.transition = 'opacity .4s';
+      setTimeout(() => {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-topbar').style.display = 'flex';
+        document.getElementById('main-content').style.display = 'flex';
+        applyRole(currentUser.role);
+        updateUserUI();
+        init();
+        addNotif('✅ লগইন সফল', `${user.name} হিসেবে লগইন করা হয়েছে।`, 'success');
+      }, 400);
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      btnText.textContent = '🔐 লগইন করুন';
+      btn.style.opacity = '1';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+    }
+  }, 600);
+}
+
+function quickLogin(user, pass, label) {
+  document.getElementById('login-user').value = user;
+  document.getElementById('login-pass').value = pass;
+  doLogin();
+}
+
+function togglePassVis() {
+  const inp = document.getElementById('login-pass');
+  const eye = document.getElementById('pass-eye');
+  if (inp.type === 'password') { inp.type = 'text'; eye.textContent = '🙈'; }
+  else { inp.type = 'password'; eye.textContent = '👁'; }
+}
+
+function applyRole(role) {
+  // Viewer: hide write actions
+  if (role === 'viewer') {
+    document.querySelectorAll('.btn-primary, .kb-btn-del, .kb-btn-edit, .btn-danger').forEach(el => {
+      if (!el.closest('#login-screen')) el.style.opacity = '0.3', el.style.pointerEvents = 'none';
+    });
+    document.getElementById('settings-tab').style.display = 'none';
+  }
+  // Agent: hide settings
+  if (role === 'agent') {
+    document.getElementById('settings-tab').style.display = 'none';
+  }
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  document.getElementById('user-avatar-btn').textContent = currentUser.avatar;
+  document.getElementById('user-display-name').textContent = currentUser.username;
+  document.getElementById('ud-name').textContent = currentUser.name;
+  document.getElementById('ud-role').textContent = `ভূমিকা: ${currentUser.role}`;
+  const rb = document.getElementById('user-role-badge');
+  rb.textContent = currentUser.role;
+  rb.className = `role-badge role-${currentUser.role}`;
+}
+
+function doLogout() {
+  localStorage.removeItem('sara-session');
+  currentUser = null;
+  document.getElementById('main-topbar').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-screen').style.opacity = '1';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('user-dropdown').classList.remove('open');
+  if (ws) { ws.close(); ws = null; }
+  showToast('লগআউট হয়েছে 👋', 'warn');
+}
+
+function changePassword() {
+  const newPass = prompt('নতুন পাসওয়ার্ড লিখুন:');
+  if (!newPass || newPass.length < 6) { showToast('কমপক্ষে ৬ অক্ষর দিন', 'error'); return; }
+  if (USERS[currentUser.username]) USERS[currentUser.username].pass = newPass;
+  document.getElementById('user-dropdown').classList.remove('open');
+  showToast('পাসওয়ার্ড পরিবর্তন হয়েছে ✅', 'success');
+}
+
+function toggleUserMenu() {
+  document.getElementById('user-dropdown').classList.toggle('open');
+  document.getElementById('notif-panel').classList.remove('open');
+}
+
+// Auto-login from saved session
+function checkSavedSession() {
+  const saved = localStorage.getItem('sara-session');
+  if (!saved) return false;
+  try {
+    const { username, pass } = JSON.parse(saved);
+    document.getElementById('login-user').value = username;
+    document.getElementById('login-pass').value = pass;
+    doLogin();
+    return true;
+  } catch { return false; }
+}
+
+// ════════════════════════════════════
+//   NOTIFICATION CENTER
+// ════════════════════════════════════
+let notifications = [];
+let unreadCount = 0;
+
+function addNotif(title, msg, type = 'info') {
+  const notif = {
+    id: Date.now(),
+    title,
+    msg,
+    type,
+    time: new Date(),
+    unread: true,
+  };
+  notifications.unshift(notif);
+  if (notifications.length > 50) notifications.pop();
+  unreadCount++;
+  updateNotifBadge();
+  renderNotifPanel();
+}
+
+function updateNotifBadge() {
+  const badge = document.getElementById('notif-badge');
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  panel.classList.toggle('open');
+  document.getElementById('user-dropdown').classList.remove('open');
+  if (panel.classList.contains('open')) {
+    markAllRead();
+    renderNotifPanel();
+  }
+}
+
+function markAllRead() {
+  notifications.forEach(n => n.unread = false);
+  unreadCount = 0;
+  updateNotifBadge();
+}
+
+function clearNotifs() {
+  notifications = [];
+  unreadCount = 0;
+  updateNotifBadge();
+  renderNotifPanel();
+}
+
+function renderNotifPanel() {
+  const list = document.getElementById('notif-list');
+  if (!notifications.length) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">🔔 কোনো notification নেই</div>';
+    return;
+  }
+  const iconMap = { success:'✅', error:'❌', warn:'⚠️', info:'ℹ️', message:'💬', order:'📦', ai:'🤖' };
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.unread?'unread':''}">
+      <div class="notif-icon">${iconMap[n.type]||'🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-msg"><strong>${n.title}</strong><br>${n.msg}</div>
+        <div class="notif-time">${timeAgo(n.time.toISOString())} আগে · ${n.time.toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+    </div>`).join('');
+}
+
+// Hook into existing events to generate notifications
+const _origHandleLiveEvent = handleLiveEvent;
+handleLiveEvent = function(data) {
+  _origHandleLiveEvent(data);
+  if (data.ai_enabled === false || data.type === 'new_message') {
+    addNotif('⚠️ Agent প্রয়োজন', `${data.customer_id || 'কাস্টমার'} থেকে নতুন মেসেজ`, 'message');
+  }
+  if (data.type === 'ai_reply') {
+    addNotif('🤖 AI রিপ্লাই দিয়েছে', `${data.customer_id || ''}: "${(data.user_message||'').substring(0,40)}..."`, 'ai');
+  }
+};
+
+// Close dropdowns on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.user-menu-wrap')) {
+    document.getElementById('user-dropdown').classList.remove('open');
+  }
+  if (!e.target.closest('.notif-btn-wrap') && !e.target.closest('#notif-panel')) {
+    document.getElementById('notif-panel').classList.remove('open');
+  }
+});
+
+// ════════════════════════════════════
+//   STARTUP
+// ════════════════════════════════════
+window.addEventListener('load', () => {
+  if (!checkSavedSession()) {
+    // Show login screen — already visible by default
+    document.getElementById('login-user').focus();
+  }
+});
+
 </script>
 </body>
 </html>
